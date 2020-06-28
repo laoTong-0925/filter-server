@@ -1,9 +1,9 @@
 package filter.load;
 
 import filter.load.hash.HashRing.HashRingHelper;
-import filter.load.hash.HashRing.ServerHashRing;
-import filter.load.model.HashRingNode;
 import filter.load.model.ServerHashRange;
+import filter.load.model.ServerHashRing;
+import filter.load.model.HashRingNode;
 import filter.load.zk.ZKConfigKey;
 import filter.load.zk.ZKFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -23,18 +23,10 @@ public class LoadCacheHelper {
 
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoadCacheHelper.class);
 
-    private static ServerHashRing serverHashRing = ServerHashRing.getInstance();
-
-    //服务区间
-//    private static List<ServerHashRange> serverHashRangeList = serverHashRing.getServerHashRangeList();
-
-    //哈希环
-//    private static List<HashRingNode> sortedHashRing = serverHashRing.getSortedHashRing();
-
     /**
-     * 本服务的哈希节点,在构建架服务区间时使用
+     * 哈希环、区间、本地服务哈希节点
      */
-    private static List<HashRingNode> thisServerForHashRing = ServerHashRing.getInstance().getThisServerForHashRing();
+    private static ServerHashRing serverHashRing;
 
     private static int port;
     private static String ip;
@@ -48,6 +40,10 @@ public class LoadCacheHelper {
 
     public static String getUrl() {
         return ip + ":" + port;
+    }
+
+    public static ServerHashRing getServerHashRing() {
+        return serverHashRing;
     }
 
     /**
@@ -89,24 +85,29 @@ public class LoadCacheHelper {
         System.out.println("-------reloadServerRange------");
         Map<String, String> allNode = ZKFactory.getAllNode(ZKConfigKey.filterServerPath);
         if (allNode != null) {
-            serverHashRing.setSortedHashRing(HashRingHelper.reloadHashRing(allNode, serverHashRing.getSortedHashRing(), thisServerForHashRing));
+            //本服务hash集合
+            List<Integer> thisServerForHashRing = new ArrayList<>();
+            //哈希环
+            List<HashRingNode> sortedHashRingList = HashRingHelper.reloadHashRing(allNode, thisServerForHashRing);
+            //区间
+            List<ServerHashRange> serverHashRangeList = HashRingHelper.initRange(sortedHashRingList, thisServerForHashRing);
+            serverHashRing = new ServerHashRing(serverHashRangeList, sortedHashRingList, thisServerForHashRing);
             logger.info("最新哈希环");
             logger.info(serverHashRing.getSortedHashRing().toString());
-            serverHashRing.setServerHashRangeList(HashRingHelper.initRange(serverHashRing.getSortedHashRing(), thisServerForHashRing));
             logger.info("--------服务区间加载完毕--------");
-            serverHashRing.getServerHashRangeList().forEach(e -> {
-                System.out.println(e.toString());
-            });
+            serverHashRing.getServerHashRangeList().forEach(e -> System.out.println(e.toString()));
         }
     }
 
     /**
      * 判断是否需要加载
      *
-     * @param userId
-     * @return
+     * @param userId 用户Id
+     * @return boolean
      */
     public static boolean isLoad(int userId) {
+        if (serverHashRing == null)
+            return false;
         return HashRingHelper.isLoad(userId, serverHashRing.getServerHashRangeList());
     }
 

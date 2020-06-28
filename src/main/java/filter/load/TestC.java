@@ -27,9 +27,6 @@ public class TestC {
             if (server != null) {
                 System.out.println(server);
             }
-//            HashRingNode server2 = LoadCache.getServer(Integer.MAX_VALUE);
-//            System.out.println(server.toString());
-//            System.out.println(server2.toString());
             TimeUnit.MINUTES.sleep(5);
         } catch (Throwable e) {
             e.printStackTrace();

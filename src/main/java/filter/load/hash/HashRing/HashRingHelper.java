@@ -1,11 +1,11 @@
 package filter.load.hash.HashRing;
 
-import filter.load.model.HashRingNode;
-import filter.load.model.ServerHashRange;
-import filter.load.zk.ZKConfigKey;
 import filter.load.LoadCacheHelper;
 import filter.load.hash.CRCHashStrategy;
 import filter.load.hash.HashStrategy;
+import filter.load.model.HashRingNode;
+import filter.load.model.ServerHashRange;
+import filter.load.zk.ZKConfigKey;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -80,11 +80,9 @@ public class HashRingHelper {
 
     /**
      * @param realNodeMap    实节点
-     * @param sortedHashRing 哈希环
      * @return List<HashRingNode> 新哈希环
      */
-    public static List<HashRingNode> reloadHashRing(Map<String, String> realNodeMap, List<HashRingNode> sortedHashRing, List<HashRingNode> thisServerForHashRing) {
-        clear(thisServerForHashRing, sortedHashRing);
+    public static List<HashRingNode> reloadHashRing(Map<String, String> realNodeMap, List<Integer> thisServerForHashRing) {
         if (realNodeMap == null) {
             logger.warn("ZK上获取不到过滤服务！！！");
             return null;
@@ -105,32 +103,19 @@ public class HashRingHelper {
     }
 
     /**
-     * 清理数据
-     *
-     * @param thisServerForHashRing 本服务的哈希环节点
-     * @param sortedHashRing        完整哈希环
-     */
-    private static void clear(List<HashRingNode> thisServerForHashRing, List<HashRingNode> sortedHashRing) {
-        if (thisServerForHashRing != null)
-            thisServerForHashRing.clear();
-        if (sortedHashRing != null)
-            sortedHashRing.clear();
-    }
-
-    /**
      * 构建虚节点，并保存本服务的节点
      *
      * @param url                   ip:port
      * @param data                  ip:port
      * @param thisServerForHashRing 哈希环上本服务的节点
      */
-    private static void buildHashRingNode(String url, String data, List<HashRingNode> thisServerForHashRing, Map<Integer, String> temporaryHasHhRing) {
+    private static void buildHashRingNode(String url, String data, List<Integer> thisServerForHashRing, Map<Integer, String> temporaryHasHhRing) {
         for (int i = 0; i <= 100; i++) {
             int serverHashCode = hashStrategy.getHashCode(url + i);
             if (!temporaryHasHhRing.containsKey(serverHashCode)) {//冲突了继续
                 temporaryHasHhRing.put(serverHashCode, data);
                 if (data.equals(LoadCacheHelper.getUrl())) {
-                    thisServerForHashRing.add(new HashRingNode(serverHashCode, data));
+                    thisServerForHashRing.add(serverHashCode);
                 }
             } else {
                 continue;
@@ -146,27 +131,27 @@ public class HashRingHelper {
     /**
      * 加载服务区间
      */
-    public static List<ServerHashRange> initRange(List<HashRingNode> sortedHashRing, List<HashRingNode> thisServerForHashRing) {
+    public static List<ServerHashRange> initRange(List<HashRingNode> sortedHashRing, List<Integer> thisServerForHashRing) {
         List<ServerHashRange> serverHashRangeList = new ArrayList<>();
         if (thisServerForHashRing == null) {
             return serverHashRangeList;
         }
-        for (HashRingNode server : thisServerForHashRing) {
+        for (Integer server : thisServerForHashRing) {
             if (null == server) {
                 throw new IllegalArgumentException();
             }
             for (int j = 0; j < sortedHashRing.size(); j++) {
                 int hashRingHashCode = sortedHashRing.get(j).getHash();
-                if (server.getHash() == hashRingHashCode) {
+                if (server == hashRingHashCode) {
                     ServerHashRange serverHashRange;
                     if (j != 0) {//其他节点
                         Integer beforeServerHashCode = sortedHashRing.get(j - 1).getHash();
                         if (null == beforeServerHashCode) {
                             throw new IllegalArgumentException();
                         }
-                        serverHashRange = new ServerHashRange(server.getHash(), beforeServerHashCode);
+                        serverHashRange = new ServerHashRange(server, beforeServerHashCode);
                     } else {//首个hash节点 最后一个节点到首个节点
-                        serverHashRange = new ServerHashRange(server.getHash(), 0);
+                        serverHashRange = new ServerHashRange(server, 0);
                         ServerHashRange last = new ServerHashRange(Integer.MAX_VALUE,
                                 sortedHashRing.get(sortedHashRing.size() - 1).getHash(), true, sortedHashRing.get(0).getHash());
                         serverHashRangeList.add(last);
