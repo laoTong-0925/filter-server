@@ -92,9 +92,7 @@ public class HashRingHelper {
         Map<Integer, String> temporaryHasHhRing = new HashMap<>();
         realNodeMap.forEach((key, value) -> buildHashRingNode(key, value, thisServerForHashRing, temporaryHasHhRing));
         logger.info("本服务的节点");
-        thisServerForHashRing.forEach(e -> {
-            logger.info(e.toString());
-        });
+        thisServerForHashRing.forEach(e -> logger.info(e.toString()));
         //排序造环
         return temporaryHasHhRing.entrySet().stream()
                 .map(e -> new HashRingNode(e.getKey(), e.getValue()))
@@ -153,7 +151,7 @@ public class HashRingHelper {
                     } else {//首个hash节点 最后一个节点到首个节点
                         serverHashRange = new ServerHashRange(server, 0);
                         ServerHashRange last = new ServerHashRange(Integer.MAX_VALUE,
-                                sortedHashRing.get(sortedHashRing.size() - 1).getHash(), true, sortedHashRing.get(0).getHash());
+                                sortedHashRing.get(sortedHashRing.size() - 1).getHash(), true);
                         serverHashRangeList.add(last);
                     }
                     serverHashRangeList.add(serverHashRange);

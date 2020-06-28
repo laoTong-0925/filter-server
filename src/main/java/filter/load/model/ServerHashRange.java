@@ -3,7 +3,6 @@ package filter.load.model;
 public class ServerHashRange {
     private final Integer serverHash;
     private final Integer beforeServerHash;
-    private final Integer headServerHash;
     private final Boolean isLast;
 
     public Integer getServerHash() {
@@ -18,27 +17,22 @@ public class ServerHashRange {
         return isLast;
     }
 
-    public Integer getHeadServerHash() {
-        return headServerHash;
-    }
 
-    public ServerHashRange(Integer serverHash, Integer beforeServerHash, Boolean isLast, Integer headServerHash) {
+    public ServerHashRange(Integer serverHash, Integer beforeServerHash, Boolean isLast) {
         this.serverHash = serverHash;
         this.beforeServerHash = beforeServerHash;
         this.isLast = isLast;
-        this.headServerHash = headServerHash;
     }
 
     public ServerHashRange(Integer serverHash, Integer beforeServerHash) {
-        this(serverHash, beforeServerHash, false, null);
-    }
+        this(serverHash, beforeServerHash, false);
+}
 
     @Override
     public String toString() {
         return "ServerHashRange{" +
                 "serverHash=" + serverHash +
                 ", beforeServerHash=" + beforeServerHash +
-                ", headServerHash=" + headServerHash +
                 ", isLast=" + isLast +
                 '}';
     }

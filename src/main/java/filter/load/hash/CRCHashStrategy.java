@@ -1,6 +1,7 @@
 package filter.load.hash;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author daofeng.xjf
@@ -59,7 +60,7 @@ public class CRCHashStrategy implements HashStrategy {
     }
 
     public static int getCRC16(String key) {
-        return getCRC16(key.getBytes(Charset.forName("UTF-8")));
+        return getCRC16(key.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

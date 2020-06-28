@@ -29,7 +29,7 @@ public class ZKFactory implements Watcher {
 
     private Map<String, String> ZKData;
 
-    private static final Map<String, NotifyCallback> callbackMap = new HashMap<String, NotifyCallback>();
+    private static final Map<String, NotifyCallback> callbackMap = new HashMap<>();
 
     private static final Object lock = new Object();
 
@@ -69,7 +69,7 @@ public class ZKFactory implements Watcher {
 
     private void reload() throws InterruptedException, KeeperException {
         synchronized (this) {
-            Map<String, String> newConfigData = new HashMap<String, String>();
+            Map<String, String> newConfigData = new HashMap<>();
             List<String> children = zooKeeper.getChildren(ZKConfigKey.filterServerPath, true);
             log.info("children--size {}", children.size());
 
@@ -131,14 +131,8 @@ public class ZKFactory implements Watcher {
         log.info("监听事件  ------  WatchedEvent:{}", event.toString());
         boolean reload = false;
 
-        switch (event.getState()) {
-            case Expired:
-                // 过期了，需要重连
-                init();
-                break;
-
-            default:
-                break;
+        if (event.getState() == Event.KeeperState.Expired) {// 过期了，需要重连
+            init();
         }
 
         switch (event.getType()) {
