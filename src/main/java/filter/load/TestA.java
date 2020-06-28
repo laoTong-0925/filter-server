@@ -1,10 +1,8 @@
-package test.load;
+package filter.load;
 
+import filter.load.hash.HashRing.ServerHashRing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import test.load.hash.HashRing.HashRingHelper;
-import test.load.model.HashRingNode;
-import test.load.zk.ZKConfigKey;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +20,10 @@ public class TestA {
 
         try {
 
-            LoadCache loadCacheA = new LoadCache(1881, "192.168.199.1");
+            LoadCacheHelper loadCacheA = new LoadCacheHelper(1881, "192.168.199.1");
+            ServerHashRing instance = ServerHashRing.getInstance();
+            TimeUnit.SECONDS.sleep(5);
+            System.out.println(instance);
             TimeUnit.MINUTES.sleep(5);
         } catch (Throwable e) {
             e.printStackTrace();

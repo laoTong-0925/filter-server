@@ -1,4 +1,4 @@
-package test.load.zk;
+package filter.load.zk;
 
 /**
  * @ClassName : ZKPathKey
@@ -12,11 +12,6 @@ public interface ZKConfigKey {
 
     String filterServerNode = "-filterServerHash";
 
-    Integer REGISTER_NODE_SIZE = 2;
-
-    String ipA = "192.168.0.1";
-    String ipB = "192.168.0.2";
-    String ipC = "192.168.0.3";
-
+    Integer VIRTUAL_NODE_SIZE = 2;
 
 }

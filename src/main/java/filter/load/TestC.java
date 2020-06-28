@@ -1,6 +1,7 @@
-package test.load;
+package filter.load;
 
-import test.load.model.HashRingNode;
+import filter.load.client.FilterServerClient;
+import filter.load.model.HashRingNode;
 
 import java.util.concurrent.TimeUnit;
 
@@ -16,13 +17,13 @@ public class TestC {
     public static void main(String[] args) {
 
         try {
-            LoadCache loadCacheC = new LoadCache(1883, "192.168.199.3");
+            LoadCacheHelper loadCacheC = new LoadCacheHelper(1883, "192.168.199.3");
             Integer[] users = {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1001};
             for (int i = 0; i < users.length - 1; i++) {
-                LoadCache.isLoad(users[i]);
+                LoadCacheHelper.isLoad(users[i]);
             }
             TimeUnit.SECONDS.sleep(2);
-            HashRingNode server = LoadCache.getServer(10000);
+            HashRingNode server = FilterServerClient.getServer(10000);
             if (server != null) {
                 System.out.println(server);
             }

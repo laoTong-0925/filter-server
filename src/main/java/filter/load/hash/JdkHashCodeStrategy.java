@@ -1,4 +1,4 @@
-package test.load.hash;
+package filter.load.hash;
 
 /**
  * @author daofeng.xjf

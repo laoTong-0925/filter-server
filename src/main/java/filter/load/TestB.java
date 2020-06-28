@@ -1,10 +1,7 @@
-package test.load;
+package filter.load;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import test.load.hash.HashRing.HashRingHelper;
-import test.load.model.HashRingNode;
-import test.load.zk.ZKConfigKey;
 
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +25,7 @@ public class TestB {
 
         try {
 
-            LoadCache loadCacheB = new LoadCache(1882, "192.168.199.2");
+            LoadCacheHelper loadCacheB = new LoadCacheHelper(1882, "192.168.199.2");
 
             TimeUnit.MINUTES.sleep(5);
         } catch (Throwable e) {

@@ -1,11 +1,12 @@
-package test.load;
+package filter.load;
 
+import filter.load.hash.HashRing.HashRingHelper;
+import filter.load.hash.HashRing.ServerHashRing;
+import filter.load.model.HashRingNode;
+import filter.load.model.ServerHashRange;
+import filter.load.zk.ZKConfigKey;
+import filter.load.zk.ZKFactory;
 import org.apache.commons.lang3.StringUtils;
-import test.load.hash.HashRing.HashRingHelper;
-import test.load.model.HashRingNode;
-import test.load.model.ServerHashRange;
-import test.load.zk.ZKConfigKey;
-import test.load.zk.ZKFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,29 +19,29 @@ import java.util.concurrent.TimeUnit;
  * @Author :
  * @Date: 2020-06-20 00:37
  */
-public class LoadCache {
+public class LoadCacheHelper {
 
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoadCache.class);
+    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LoadCacheHelper.class);
 
-    private static HashRingHelper hashRingHelper = HashRingHelper.getInstance();
+    private static ServerHashRing serverHashRing = ServerHashRing.getInstance();
 
     //服务区间
-    private static List<ServerHashRange> serverHashRangeList = new ArrayList<>();
+//    private static List<ServerHashRange> serverHashRangeList = serverHashRing.getServerHashRangeList();
 
     //哈希环
-    private static List<HashRingNode> sortedHashRing = new ArrayList<>();
+//    private static List<HashRingNode> sortedHashRing = serverHashRing.getSortedHashRing();
 
     /**
      * 本服务的哈希节点,在构建架服务区间时使用
      */
-    private static List<HashRingNode> thisServerForHashRing = new ArrayList<>();
+    private static List<HashRingNode> thisServerForHashRing = ServerHashRing.getInstance().getThisServerForHashRing();
 
     private static int port;
     private static String ip;
 
-    public LoadCache(int port, String ip) {
-        LoadCache.port = port;
-        LoadCache.ip = ip;
+    public LoadCacheHelper(int port, String ip) {
+        LoadCacheHelper.port = port;
+        LoadCacheHelper.ip = ip;
         loadCacheRegister();
 
     }
@@ -88,20 +89,16 @@ public class LoadCache {
         System.out.println("-------reloadServerRange------");
         Map<String, String> allNode = ZKFactory.getAllNode(ZKConfigKey.filterServerPath);
         if (allNode != null) {
-            sortedHashRing = hashRingHelper.reloadHashRing(allNode, sortedHashRing, thisServerForHashRing);
+            serverHashRing.setSortedHashRing(HashRingHelper.reloadHashRing(allNode, serverHashRing.getSortedHashRing(), thisServerForHashRing));
             logger.info("最新哈希环");
-            logger.info(sortedHashRing.toString());
-            serverHashRangeList = hashRingHelper.initRange(sortedHashRing, thisServerForHashRing);
+            logger.info(serverHashRing.getSortedHashRing().toString());
+            serverHashRing.setServerHashRangeList(HashRingHelper.initRange(serverHashRing.getSortedHashRing(), thisServerForHashRing));
+            logger.info("--------服务区间加载完毕--------");
+            serverHashRing.getServerHashRangeList().forEach(e -> {
+                System.out.println(e.toString());
+            });
         }
     }
-
-    /**
-     * 返回服务
-     */
-    public static HashRingNode getServer(int userId) {
-        return hashRingHelper.get(userId, sortedHashRing);
-    }
-
 
     /**
      * 判断是否需要加载
@@ -110,8 +107,32 @@ public class LoadCache {
      * @return
      */
     public static boolean isLoad(int userId) {
-        return hashRingHelper.isLoad(userId, serverHashRangeList);
+        return HashRingHelper.isLoad(userId, serverHashRing.getServerHashRangeList());
     }
 
+    /**
+     * 获取用户过滤结果
+     *
+     * @param userId 目标用户
+     * @return List<Integer> 过滤后的用户Id
+     */
+    public static List<Integer> getUserFilterResult(int userId) {
+        List<Integer> userIds = new ArrayList<>();
+        List<Integer> materielUsers = getMaterielUsers(userId);
+        materielUsers.forEach(e -> {
+            if (isLoad(userId)) {
+                //todo filter BitMap, add()
+            } else {
+                //todo filter DB, add()
+            }
+        });
+        return userIds;
+    }
+
+    private static List<Integer> getMaterielUsers(int userId) {
+        List<Integer> materielUsers = new ArrayList<>();
+        //todo 获取物料
+        return materielUsers;
+    }
 
 }

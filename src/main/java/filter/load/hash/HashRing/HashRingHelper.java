@@ -1,11 +1,11 @@
-package test.load.hash.HashRing;
+package filter.load.hash.HashRing;
 
-import test.load.LoadCache;
-import test.load.hash.CRCHashStrategy;
-import test.load.hash.HashStrategy;
-import test.load.model.HashRingNode;
-import test.load.model.ServerHashRange;
-import test.load.zk.ZKConfigKey;
+import filter.load.model.HashRingNode;
+import filter.load.model.ServerHashRange;
+import filter.load.zk.ZKConfigKey;
+import filter.load.LoadCacheHelper;
+import filter.load.hash.CRCHashStrategy;
+import filter.load.hash.HashStrategy;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,31 +13,18 @@ import java.util.stream.Collectors;
 /**
  * @ClassName : HashRingHelp
  * @Description : 哈希环
- * @Author :
+ * @Author : t_t
  * @Date: 2020-06-20 22:36
  */
 public class HashRingHelper {
 
-    private org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashRingHelper.class);
-
-    /**
-     * 临时存放节点,方便进行哈希去重
-     */
-    private static Map<Integer, String> hashRing = new HashMap<>();
+    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashRingHelper.class);
 
     private static final HashStrategy hashStrategy = new CRCHashStrategy();
 
-    private static Integer REGISTER_NODE_SIZE = ZKConfigKey.REGISTER_NODE_SIZE;
+    private static Integer VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
 
     private HashRingHelper() {
-    }
-
-    private static class ServerHashRing {
-        private static final HashRingHelper INSTANCE = new HashRingHelper();
-    }
-
-    public static HashRingHelper getInstance() {
-        return ServerHashRing.INSTANCE;
     }
 
     public static HashStrategy getHashStrategy() {
@@ -47,11 +34,11 @@ public class HashRingHelper {
     /**
      * 获取服务节点
      *
-     * @param key
-     * @param sortedHashRing
+     * @param key            key
+     * @param sortedHashRing 哈希环
      * @return HashRingNode 服务节点
      */
-    public HashRingNode get(int key, List<HashRingNode> sortedHashRing) {
+    public static HashRingNode get(int key, List<HashRingNode> sortedHashRing) {
         if (sortedHashRing == null)
             return null;
         int size = sortedHashRing.size();
@@ -74,7 +61,7 @@ public class HashRingHelper {
      * @param serverHashRangeList 服务区间集合
      * @return boolean 加载返回true 不加载返回false
      */
-    public boolean isLoad(int userId, List<ServerHashRange> serverHashRangeList) {
+    public static boolean isLoad(int userId, List<ServerHashRange> serverHashRangeList) {
         if (serverHashRangeList == null)
             return false;
         int userHashCode = hashStrategy.getHashCode(String.valueOf(userId));
@@ -96,7 +83,7 @@ public class HashRingHelper {
      * @param sortedHashRing 哈希环
      * @return List<HashRingNode> 新哈希环
      */
-    public List<HashRingNode> reloadHashRing(Map<String, String> realNodeMap, List<HashRingNode> sortedHashRing, List<HashRingNode> thisServerForHashRing) {
+    public static List<HashRingNode> reloadHashRing(Map<String, String> realNodeMap, List<HashRingNode> sortedHashRing, List<HashRingNode> thisServerForHashRing) {
         clear(thisServerForHashRing, sortedHashRing);
         if (realNodeMap == null) {
             logger.warn("ZK上获取不到过滤服务！！！");
@@ -104,18 +91,17 @@ public class HashRingHelper {
         }
         logger.info("获取所有实节点");
         logger.info(realNodeMap.toString());
-        realNodeMap.forEach((key, value) -> buildHashRingNode(key, value, thisServerForHashRing));
+        Map<Integer, String> temporaryHasHhRing = new HashMap<>();
+        realNodeMap.forEach((key, value) -> buildHashRingNode(key, value, thisServerForHashRing, temporaryHasHhRing));
         logger.info("本服务的节点");
         thisServerForHashRing.forEach(e -> {
             logger.info(e.toString());
         });
         //排序造环
-        sortedHashRing = hashRing.entrySet().stream()
+        return temporaryHasHhRing.entrySet().stream()
                 .map(e -> new HashRingNode(e.getKey(), e.getValue()))
                 .sorted(Comparator.comparing(HashRingNode::getHash))
                 .collect(Collectors.toList());
-        hashRing.clear();
-        return sortedHashRing;
     }
 
     /**
@@ -124,7 +110,7 @@ public class HashRingHelper {
      * @param thisServerForHashRing 本服务的哈希环节点
      * @param sortedHashRing        完整哈希环
      */
-    private void clear(List<HashRingNode> thisServerForHashRing, List<HashRingNode> sortedHashRing) {
+    private static void clear(List<HashRingNode> thisServerForHashRing, List<HashRingNode> sortedHashRing) {
         if (thisServerForHashRing != null)
             thisServerForHashRing.clear();
         if (sortedHashRing != null)
@@ -138,29 +124,29 @@ public class HashRingHelper {
      * @param data                  ip:port
      * @param thisServerForHashRing 哈希环上本服务的节点
      */
-    private void buildHashRingNode(String url, String data, List<HashRingNode> thisServerForHashRing) {
+    private static void buildHashRingNode(String url, String data, List<HashRingNode> thisServerForHashRing, Map<Integer, String> temporaryHasHhRing) {
         for (int i = 0; i <= 100; i++) {
             int serverHashCode = hashStrategy.getHashCode(url + i);
-            if (!hashRing.containsKey(serverHashCode)) {//冲突了继续
-                hashRing.put(serverHashCode, data);
-                if (data.equals(LoadCache.getUrl())) {
+            if (!temporaryHasHhRing.containsKey(serverHashCode)) {//冲突了继续
+                temporaryHasHhRing.put(serverHashCode, data);
+                if (data.equals(LoadCacheHelper.getUrl())) {
                     thisServerForHashRing.add(new HashRingNode(serverHashCode, data));
                 }
             } else {
                 continue;
             }
-            if (REGISTER_NODE_SIZE <= 0) {
-                REGISTER_NODE_SIZE = ZKConfigKey.REGISTER_NODE_SIZE;
+            if (VIRTUAL_NODE_SIZE <= 0) {
+                VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
                 return;
             }
-            REGISTER_NODE_SIZE--;
+            VIRTUAL_NODE_SIZE--;
         }
     }
 
     /**
      * 加载服务区间
      */
-    public List<ServerHashRange> initRange(List<HashRingNode> sortedHashRing, List<HashRingNode> thisServerForHashRing) {
+    public static List<ServerHashRange> initRange(List<HashRingNode> sortedHashRing, List<HashRingNode> thisServerForHashRing) {
         List<ServerHashRange> serverHashRangeList = new ArrayList<>();
         if (thisServerForHashRing == null) {
             return serverHashRangeList;
@@ -174,8 +160,6 @@ public class HashRingHelper {
                 if (server.getHash() == hashRingHashCode) {
                     ServerHashRange serverHashRange;
                     if (j != 0) {//其他节点
-//                        if (j == hashRing.size() - 1) //最后一个已经在第一个中计算了
-//                            break;
                         Integer beforeServerHashCode = sortedHashRing.get(j - 1).getHash();
                         if (null == beforeServerHashCode) {
                             throw new IllegalArgumentException();
@@ -191,10 +175,10 @@ public class HashRingHelper {
                 }
             }
         }
-        logger.info("--------服务区间加载完毕--------");
-        serverHashRangeList.forEach(e -> {
-            System.out.println(e.toString());
-        });
+//        logger.info("--------服务区间加载完毕--------");
+//        serverHashRangeList.forEach(e -> {
+//            System.out.println(e.toString());
+//        });
         return serverHashRangeList;
     }
 

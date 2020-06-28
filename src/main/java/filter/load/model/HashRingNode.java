@@ -1,4 +1,4 @@
-package test.load.model;
+package filter.load.model;
 
 /**
  * @ClassName : HashRingNode

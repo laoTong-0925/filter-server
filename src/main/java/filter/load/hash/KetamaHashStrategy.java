@@ -1,4 +1,4 @@
-package test.load.hash;
+package filter.load.hash;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
