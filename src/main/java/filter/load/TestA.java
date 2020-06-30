@@ -1,6 +1,5 @@
 package filter.load;
 
-import filter.load.model.ServerHashRing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,10 +19,6 @@ public class TestA {
 
         try {
 
-            LoadCacheHelper loadCacheA = new LoadCacheHelper(1881, "192.168.199.1");
-            TimeUnit.SECONDS.sleep(5);
-            ServerHashRing instance = LoadCacheHelper.getServerHashRing();
-            System.out.println(instance);
             TimeUnit.MINUTES.sleep(5);
         } catch (Throwable e) {
             e.printStackTrace();

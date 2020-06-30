@@ -1,10 +1,10 @@
 package filter.load.hash.HashRing;
 
-import filter.load.LoadCacheHelper;
 import filter.load.hash.CRCHashStrategy;
 import filter.load.hash.HashStrategy;
-import filter.load.model.HashRingNode;
+import filter.load.model.LocalServer;
 import filter.load.model.ServerHashRange;
+import filter.load.model.ServerNode;
 import filter.load.zk.ZKConfigKey;
 
 import java.util.*;
@@ -38,13 +38,13 @@ public class HashRingHelper {
      * @param sortedHashRing 哈希环
      * @return HashRingNode 服务节点
      */
-    public static HashRingNode get(int key, List<HashRingNode> sortedHashRing) {
+    public static ServerNode get(int key, List<ServerNode> sortedHashRing) {
         if (sortedHashRing == null)
             return null;
         int size = sortedHashRing.size();
         for (int i = 0; i < size; i++) {
-            HashRingNode head = sortedHashRing.get(0);
-            HashRingNode tail = sortedHashRing.get(size - 1);
+            ServerNode head = sortedHashRing.get(0);
+            ServerNode tail = sortedHashRing.get(size - 1);
             if (head != null && tail != null && (key <= head.getHash() || key > tail.getHash())) {//边界处理
                 return head;
             } else if (key <= sortedHashRing.get(i).getHash() && key > sortedHashRing.get(i - 1).getHash()) {
@@ -82,7 +82,7 @@ public class HashRingHelper {
      * @param realNodeMap    实节点
      * @return List<HashRingNode> 新哈希环
      */
-    public static List<HashRingNode> reloadHashRing(Map<String, String> realNodeMap, List<Integer> thisServerForHashRing) {
+    public static List<ServerNode> reloadHashRing(Map<String, String> realNodeMap, List<Integer> thisServerForHashRing) {
         if (realNodeMap == null) {
             logger.warn("ZK上获取不到过滤服务！！！");
             return null;
@@ -95,8 +95,8 @@ public class HashRingHelper {
         thisServerForHashRing.forEach(e -> logger.info(e.toString()));
         //排序造环
         return temporaryHasHhRing.entrySet().stream()
-                .map(e -> new HashRingNode(e.getKey(), e.getValue()))
-                .sorted(Comparator.comparing(HashRingNode::getHash))
+                .map(e -> new ServerNode(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(ServerNode::getHash))
                 .collect(Collectors.toList());
     }
 
@@ -112,7 +112,7 @@ public class HashRingHelper {
             int serverHashCode = hashStrategy.getHashCode(url + i);
             if (!temporaryHasHhRing.containsKey(serverHashCode)) {//冲突了继续
                 temporaryHasHhRing.put(serverHashCode, data);
-                if (data.equals(LoadCacheHelper.getUrl())) {
+                if (data.equals(LocalServer.getUrl())) {
                     thisServerForHashRing.add(serverHashCode);
                 }
             } else {
@@ -129,7 +129,7 @@ public class HashRingHelper {
     /**
      * 加载服务区间
      */
-    public static List<ServerHashRange> initRange(List<HashRingNode> sortedHashRing, List<Integer> thisServerForHashRing) {
+    public static List<ServerHashRange> initRange(List<ServerNode> sortedHashRing, List<Integer> thisServerForHashRing) {
         List<ServerHashRange> serverHashRangeList = new ArrayList<>();
         if (thisServerForHashRing == null) {
             return serverHashRangeList;

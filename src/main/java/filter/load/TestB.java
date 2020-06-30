@@ -25,7 +25,6 @@ public class TestB {
 
         try {
 
-            LoadCacheHelper loadCacheB = new LoadCacheHelper(1882, "192.168.199.2");
 
             TimeUnit.MINUTES.sleep(5);
         } catch (Throwable e) {

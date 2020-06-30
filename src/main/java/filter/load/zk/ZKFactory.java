@@ -113,7 +113,7 @@ public class ZKFactory implements Watcher {
 
     public static void registerHashRingNode(String url, String data) {
         try {
-            String wholePath = ZKConfigKey.filterServerPath + "/" + url + ZKConfigKey.filterServerNode;
+            String wholePath = ZKConfigKey.filterServerPath + "/" + url + ConfigStringListKeys.ThriftMatchFilterServer.name();
             if (getInstance().zooKeeper.exists(wholePath, false) == null) {
                 log.debug("notify by create path: wholePath={}, data={}", wholePath, data);
                 getInstance().zooKeeper.create(wholePath, data.getBytes(),
@@ -173,16 +173,14 @@ public class ZKFactory implements Watcher {
                     String path1 = entry.getKey();
                     String oldData = oldMap.get(path1);
                     String newData = entry.getValue();
-                    System.out.println("变更通知");
-                    System.out.println("path:" + path1);
 
                     if (!StringUtils.equals(oldData, newData)) {
-                        log.info("改变 path:{} {}--->{}", path, oldData, newData);
+                        log.info("变更 path:{} {}--->{}", path, oldData, newData);
                         // raw数据里有时间戳，不一致就通知
                         NotifyCallback cb = callbackMap.get(path);
                         if (null == cb) {
                             callbackMap.entrySet().stream()
-                                    .filter(e -> e.getKey().contains(ZKConfigKey.filterServerNode))
+                                    .filter(e -> e.getKey().contains(ConfigStringListKeys.ThriftMatchFilterServer.name()))
                                     .forEach(e -> {
                                         NotifyCallback callback = e.getValue();
                                         log.info("通知 {} 进行重新计算hash环 ", e.getKey());

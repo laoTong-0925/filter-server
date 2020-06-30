@@ -6,9 +6,9 @@ package filter.load.model;
  * @Author : t_t
  * @Date: 2020-06-20 22:37
  */
-public class HashRingNode {
+public class ServerNode {
 
-    private final Integer hash;
+    private final int hash;
 
     private final String url;
 
@@ -20,7 +20,7 @@ public class HashRingNode {
         return hash;
     }
 
-    public HashRingNode(Integer hash, String url) {
+    public ServerNode(Integer hash, String url) {
         this.hash = hash;
         this.url = url;
     }
