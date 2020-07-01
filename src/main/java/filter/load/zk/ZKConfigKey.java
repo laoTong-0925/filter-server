@@ -1,8 +1,5 @@
 package filter.load.zk;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @ClassName : ZKPathKey
  * @Description :
@@ -11,7 +8,13 @@ import java.util.Map;
  */
 public interface ZKConfigKey {
 
+    String filterServer = "FilterServer";
+
     String filterServerPath = "/filter";
+
+    String filterClientPool = "-ClientPool";
+
+    String filterServerHashRing = "-HashRing";
 
     int VIRTUAL_NODE_SIZE = 2;
 

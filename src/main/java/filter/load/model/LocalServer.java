@@ -8,16 +8,9 @@ package filter.load.model;
  */
 public class LocalServer {
 
-    private static int port;
-    private static String ip;
+    private static String ip ="192.168.1.1:1101";
 
-    public LocalServer(int port, String ip) {
-        LocalServer.port = port;
-        LocalServer.ip = ip;
+    public static String getIp() {
+        return ip;
     }
-
-    public static String getUrl() {
-        return ip + ":" + port;
-    }
-
 }

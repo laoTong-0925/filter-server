@@ -85,7 +85,7 @@ public class HashRingHelper {
             int serverHashCode = hashStrategy.getHashCode(url + i);
             if (!temporaryHasHhRing.containsKey(serverHashCode)) {//冲突了继续
                 temporaryHasHhRing.put(serverHashCode, data);
-                if (data.equals(LocalServer.getUrl())) {
+                if (data.equals(LocalServer.getIp())) {
                     thisServerForHashRing.add(serverHashCode);
                 }
             } else {

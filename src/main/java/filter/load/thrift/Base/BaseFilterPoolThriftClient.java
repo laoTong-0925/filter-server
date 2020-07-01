@@ -5,6 +5,7 @@ import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
 import com.wealoha.thrift.ThriftClientPool;
 import filter.load.zk.ConfigStringListKeys;
+import filter.load.zk.ZKConfigKey;
 import filter.load.zk.ZKFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.thrift.TServiceClient;
@@ -16,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName : BasePoolThriftClient
@@ -35,7 +37,7 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
     private Pattern p = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+):(\\d+)");
 
     private void regCallBack() {
-        ZKFactory.registerCallback(getConfigKey().configKey(), (path, oldData, newData) -> {
+        ZKFactory.registerCallback(getConfigKey().configKey() + ZKConfigKey.filterClientPool, (path, oldData, newData) -> {
             logger.info("收到通知准备reload配置数据...");
             try {
                 TimeUnit.SECONDS.sleep(10);
@@ -49,16 +51,12 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
                 return;
             }
             PoolConfig config = getConfig();
-            if (oldServerList == null) {//初次
-                servicesList.forEach(server -> clientPoolMap.put(getUrl(server), new ThriftClientPool<>(Collections.singletonList(server), this::getClient, config)));
-            } else {
-                logger.info("变更服务: old:{} ---> new:{}", oldServerList, servicesList);
-                //服务只会增加 servicesList > oldServerList
+            logger.info("变更服务: old:{} ---> new:{}", oldServerList, servicesList);
+            //服务只会增加 servicesList > oldServerList
+            if (!CollectionUtils.isEmpty(oldServerList)) {
                 servicesList.removeAll(oldServerList);
-                servicesList.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, config)));
             }
-
-
+            servicesList.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, config)));
         });
     }
 
@@ -135,12 +133,14 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
         return config;
     }
 
-    private String getUrl(ServiceInfo service) {
+    protected String getUrl(ServiceInfo service) {
         return service.getHost() + ":" + service.getPort();
     }
 
     protected List<ServiceInfo> getServicesList() {
-        List<String> list = Config.instance.get(getConfigKey());
+        Map<String, String> allNode = ZKFactory.getAllNode(ZKConfigKey.filterServerPath);
+        List<String> list = new ArrayList<>(allNode.values());
+//        List<String> list = Config.instance.get(getConfigKey());
         List<ServiceInfo> services = new ArrayList<>();
         for (String item : list) {
             Matcher matcher = p.matcher(item);
@@ -155,7 +155,4 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
         return services;
     }
 
-    protected List<String> getOldServicesListCache() {
-        return serviceList;
-    }
 }

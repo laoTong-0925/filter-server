@@ -8,5 +8,8 @@ import java.util.Map;
 public interface CacheService {
 
     Map<Integer, SyncRoaringBitmap> getBitmap();
+
     void addIntoBitMap(int userId, Collection<Integer> userIds);
+
+    void loadToBitMap();
 }

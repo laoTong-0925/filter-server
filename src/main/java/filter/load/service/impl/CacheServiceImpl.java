@@ -3,14 +3,14 @@ package filter.load.service.impl;
 import filter.load.TestData;
 import filter.load.bitMap.SyncRoaringBitmap;
 import filter.load.hash.HashRing.HashRingHelper;
+import filter.load.model.LocalServer;
 import filter.load.model.ServerHashRange;
 import filter.load.model.ServerNode;
 import filter.load.service.CacheService;
+import filter.load.zk.ZKFactory;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @ClassName : LoadCacheHelper
@@ -33,7 +33,7 @@ public class CacheServiceImpl implements CacheService {
     private Map<Integer, SyncRoaringBitmap> bitmap;
 
 //    @Autowired
-//    private Dao
+//    private Dao;
 
     @Override
     public Map<Integer, SyncRoaringBitmap> getBitmap() {
@@ -50,8 +50,7 @@ public class CacheServiceImpl implements CacheService {
     /**
      * 加载至BitMap
      */
-    @PostConstruct
-    private void loadToBitMap() {
+    public void loadToBitMap() {
         Map<String, String> beginNode = TestData.beginNode;
 
         //哈希环
@@ -67,10 +66,11 @@ public class CacheServiceImpl implements CacheService {
         logger.info("--------服务区间加载完毕--------");
         serverHashRangeList.forEach(e -> logger.info(e.toString()));
         bitmap = new HashMap<>();
-        List<Integer> users = new ArrayList<>();
+        List<Integer> users = Arrays.asList(TestData.users);
         //todo 加载数据
         users.parallelStream().filter(this::isLoad).forEach(e -> {
-            List<Integer> alohaRecd = new ArrayList<>();
+            logger.info("加载用户：" + e.toString());
+            List<Integer> alohaRecd = new ArrayList<>(Arrays.asList(TestData.Aloha));
             //todo 查出记录
             SyncRoaringBitmap syncRoaringBitmap = new SyncRoaringBitmap();
             for (Integer integer : alohaRecd) {
@@ -78,6 +78,7 @@ public class CacheServiceImpl implements CacheService {
             }
             bitmap.put(e, syncRoaringBitmap);
         });
+        ZKFactory.registerHashRingNode(LocalServer.getIp(), LocalServer.getIp());
     }
 
     /**

@@ -180,7 +180,7 @@ public class ZKFactory implements Watcher {
                         NotifyCallback cb = callbackMap.get(path);
                         if (null == cb) {
                             callbackMap.entrySet().stream()
-                                    .filter(e -> e.getKey().contains(ConfigStringListKeys.ThriftMatchFilterServer.name()))
+                                    .filter(e -> e.getKey().contains(ZKConfigKey.filterServer))
                                     .forEach(e -> {
                                         NotifyCallback callback = e.getValue();
                                         log.info("通知 {} 进行重新计算hash环 ", e.getKey());

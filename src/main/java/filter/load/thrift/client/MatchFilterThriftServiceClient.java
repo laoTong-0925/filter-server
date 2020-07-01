@@ -2,11 +2,14 @@ package filter.load.thrift.client;
 
 import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
+import filter.load.hash.HashRing.HashRingHelper;
 import filter.load.model.ServerNode;
 import filter.load.route.RouteHelper;
 import filter.load.thrift.Base.BaseFilterPoolThriftClient;
 import filter.load.thrift.service.MatchFilterThriftService;
 import filter.load.zk.ConfigStringListKeys;
+import filter.load.zk.ZKConfigKey;
+import filter.load.zk.ZKFactory;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.TException;
@@ -15,8 +18,11 @@ import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TTransport;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName : FilterServerClient
@@ -30,6 +36,34 @@ public class MatchFilterThriftServiceClient extends BaseFilterPoolThriftClient<M
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MatchFilterThriftServiceClient.class);
 
     /**
+     * 哈希环,响应callBack
+     */
+    private static List<ServerNode> sortedHashRing;
+
+    private void register() {
+        ZKFactory.registerCallback(ConfigStringListKeys.ThriftMatchFilterServer.name(),
+                (path, oldData, newData) -> {
+                    if (StringUtils.isNotBlank(path) || StringUtils.isNotBlank(newData)) {
+                        loadHashRing();
+                    } else {
+                        logger.warn("新过滤服务路径为空或Data为空 path:{} newData:{}", path, newData);
+                    }
+                });
+    }
+
+    private void loadHashRing() {
+        Map<String, String> realNodeMap = ZKFactory.getAllNode(ZKConfigKey.filterServerPath);
+        if (realNodeMap == null) {
+            logger.warn("ZK获取不到过滤服务！！！");
+            return;
+        }
+        logger.info("从ZK获取过滤服务节点为:{}", realNodeMap);
+        List<Integer> thisServerForHashRing = new ArrayList<>();
+        sortedHashRing = HashRingHelper.reloadHashRing(realNodeMap, thisServerForHashRing);
+        logger.info("新hash环,{}", sortedHashRing);
+    }
+
+    /**
      * 获取用户过滤结果,查找不存在
      *
      * @param userId  目标用户
@@ -39,16 +73,28 @@ public class MatchFilterThriftServiceClient extends BaseFilterPoolThriftClient<M
     public Set<Integer> findNotExit(int userId, Set<Integer> userIds) {
         if (userId == 0 && CollectionUtils.isEmpty(userIds))
             return null;
-        List<ServerNode> sortedHashRing = RouteHelper.getSortedHashRing();
+        if (sortedHashRing == null) {
+            synchronized (this) {
+                if (sortedHashRing == null) {
+                    loadHashRing();
+                    register();
+                }
+            }
+        }
         ServerNode serverNode = RouteHelper.routeServer(userId, sortedHashRing);
         if (serverNode == null)
             return null;
         MatchFilterThriftService.Iface client = null;
-        for (String e : getOldServicesListCache()) {
+        List<String> serverList = getServicesList().stream().map(this::getUrl).collect(Collectors.toList());
+        for (String e : serverList) {
             if (StringUtils.isNotBlank(e) && e.equals(serverNode.getUrl())) {
                 String[] serviceStrings = StringUtils.split(e, ":");
                 if (serviceStrings.length == 2 && StringUtils.isNotBlank(serviceStrings[0]) && StringUtils.isNotBlank(serviceStrings[1])) {
-                    client = getClientPool(new ServiceInfo(serviceStrings[0], Integer.parseInt(serviceStrings[1]))).iface();
+                    try {
+                        client = getClientPool(new ServiceInfo(serviceStrings[0], Integer.parseInt(serviceStrings[1]))).iface();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
         }

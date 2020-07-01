@@ -11,6 +11,7 @@ import java.util.Map;
  */
 public class TestData {
     public static Integer[] users = {0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900};
+    public static Integer[] Aloha = {1, 10};
     public static Map<String, String> beginNode = new HashMap<>();
 
     static {

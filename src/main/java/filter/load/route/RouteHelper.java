@@ -1,16 +1,9 @@
 package filter.load.route;
 
-import filter.load.hash.HashRing.HashRingHelper;
 import filter.load.model.ServerNode;
-import filter.load.zk.ConfigStringListKeys;
-import filter.load.zk.ZKConfigKey;
-import filter.load.zk.ZKFactory;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @ClassName : RouteHelper
@@ -19,38 +12,6 @@ import java.util.Map;
  * @Date: 2020-06-30 13:19
  */
 public class RouteHelper {
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RouteHelper.class);
-
-    /**
-     * 哈希环,响应callBack
-     */
-    private static List<ServerNode> sortedHashRing;
-
-    static {
-        ZKFactory.registerCallback(ConfigStringListKeys.ThriftMatchFilterServer.name(),
-                (path, oldData, newData) -> {
-                    if (StringUtils.isNotBlank(path) || StringUtils.isNotBlank(newData)) {
-                        String filterName = ConfigStringListKeys.ThriftMatchFilterServer.name();
-                        if (path.contains(filterName)) {
-                            Map<String, String> realNodeMap = ZKFactory.getAllNode(ZKConfigKey.filterServerPath);
-                            if (realNodeMap == null) {
-                                logger.warn("ZK获取不到过滤服务！！！");
-                                return;
-                            }
-                            logger.info("从ZK获取过滤服务节点为:{}", realNodeMap);
-                            List<Integer> thisServerForHashRing = new ArrayList<>();
-                            sortedHashRing = HashRingHelper.reloadHashRing(realNodeMap, thisServerForHashRing);
-                        }
-                    } else {
-                        logger.warn("新过滤服务路径为空或Data为空 path:{} newData:{}", path, newData);
-                    }
-                });
-    }
-
-    public static List<ServerNode> getSortedHashRing() {
-        return sortedHashRing;
-    }
-
     /**
      * 路由
      *
@@ -73,6 +34,4 @@ public class RouteHelper {
         }
         return null;
     }
-
-
 }
