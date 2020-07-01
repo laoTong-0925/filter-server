@@ -15,7 +15,6 @@ public class LoadCacheHelperTest {
     public void testA() throws InterruptedException {
         MatchFilterThriftServiceClient client = CUBeanFactory.getBean(MatchFilterThriftServiceClient.class);
         CacheService cacheService = CUBeanFactory.getBean(CacheService.class);
-        cacheService.loadToBitMap();
         Set<Integer> set = new HashSet<>();
         set.add(1);
         set.add(100);
@@ -30,7 +29,6 @@ public class LoadCacheHelperTest {
     public void testB() throws InterruptedException {
         MatchFilterThriftServiceClient client = CUBeanFactory.getBean(MatchFilterThriftServiceClient.class);
         CacheService cacheService = CUBeanFactory.getBean(CacheService.class);
-        cacheService.loadToBitMap();
         Set<Integer> set = new HashSet<>();
         set.add(1);
         set.add(100);

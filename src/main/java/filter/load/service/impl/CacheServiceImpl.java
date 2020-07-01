@@ -8,6 +8,8 @@ import filter.load.model.ServerHashRange;
 import filter.load.model.ServerNode;
 import filter.load.service.CacheService;
 import filter.load.zk.ZKFactory;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -19,7 +21,7 @@ import java.util.*;
  * @Date: 2020-06-20 00:37
  */
 @Service
-public class CacheServiceImpl implements CacheService {
+public class CacheServiceImpl implements CacheService, ApplicationListener<ContextRefreshedEvent> {
 
     private org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CacheServiceImpl.class);
 
@@ -50,7 +52,7 @@ public class CacheServiceImpl implements CacheService {
     /**
      * 加载至BitMap
      */
-    public void loadToBitMap() {
+    private void loadToBitMap() {
         Map<String, String> beginNode = TestData.beginNode;
 
         //哈希环
@@ -93,4 +95,11 @@ public class CacheServiceImpl implements CacheService {
         return HashRingHelper.isLoad(userId, serverHashRangeList);
     }
 
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+        if (contextRefreshedEvent == null)
+            return;
+        logger.info("spring上下文加载完毕");
+        loadToBitMap();
+    }
 }

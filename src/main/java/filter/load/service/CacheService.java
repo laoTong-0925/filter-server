@@ -11,5 +11,4 @@ public interface CacheService {
 
     void addIntoBitMap(int userId, Collection<Integer> userIds);
 
-    void loadToBitMap();
 }
