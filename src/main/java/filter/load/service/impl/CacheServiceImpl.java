@@ -102,4 +102,5 @@ public class CacheServiceImpl implements CacheService, ApplicationListener<Conte
         logger.info("spring上下文加载完毕");
         loadToBitMap();
     }
+
 }
