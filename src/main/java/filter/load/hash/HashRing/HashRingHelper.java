@@ -27,33 +27,6 @@ public class HashRingHelper {
     private HashRingHelper() {
     }
 
-    public static HashStrategy getHashStrategy() {
-        return hashStrategy;
-    }
-
-    /**
-     * 获取服务节点
-     *
-     * @param key            key
-     * @param sortedHashRing 哈希环
-     * @return HashRingNode 服务节点
-     */
-    public static ServerNode get(int key, List<ServerNode> sortedHashRing) {
-        if (sortedHashRing == null)
-            return null;
-        int size = sortedHashRing.size();
-        for (int i = 0; i < size; i++) {
-            ServerNode head = sortedHashRing.get(0);
-            ServerNode tail = sortedHashRing.get(size - 1);
-            if (head != null && tail != null && (key <= head.getHash() || key > tail.getHash())) {//边界处理
-                return head;
-            } else if (key <= sortedHashRing.get(i).getHash() && key > sortedHashRing.get(i - 1).getHash()) {
-                return sortedHashRing.get(i);
-            }
-        }
-        return null;
-    }
-
     /**
      * 是否加载user数据
      *

@@ -1,7 +1,6 @@
 package filter.load.route;
 
-import filter.load.hash.CRCHashStrategy;
-import filter.load.hash.HashStrategy;
+import filter.load.hash.HashRing.HashRingHelper;
 import filter.load.model.ServerNode;
 import filter.load.zk.ConfigStringListKeys;
 import filter.load.zk.ZKConfigKey;
@@ -9,11 +8,9 @@ import filter.load.zk.ZKFactory;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @ClassName : RouteHelper
@@ -23,10 +20,6 @@ import java.util.stream.Collectors;
  */
 public class RouteHelper {
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RouteHelper.class);
-
-    private static final HashStrategy hashStrategy = new CRCHashStrategy();
-
-    private static int VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
 
     /**
      * 哈希环,响应callBack
@@ -45,13 +38,8 @@ public class RouteHelper {
                                 return;
                             }
                             logger.info("从ZK获取过滤服务节点为:{}", realNodeMap);
-                            Map<Integer, String> temporaryHashRing = new HashMap<>();
-                            realNodeMap.forEach((key, value) -> buildHashRing(key, value, temporaryHashRing));
-                            //排序造环
-                            sortedHashRing = temporaryHashRing.entrySet().stream()
-                                    .map(e -> new ServerNode(e.getKey(), e.getValue()))
-                                    .sorted(Comparator.comparing(ServerNode::getHash))
-                                    .collect(Collectors.toList());
+                            List<Integer> thisServerForHashRing = new ArrayList<>();
+                            sortedHashRing = HashRingHelper.reloadHashRing(realNodeMap, thisServerForHashRing);
                         }
                     } else {
                         logger.warn("新过滤服务路径为空或Data为空 path:{} newData:{}", path, newData);
@@ -86,26 +74,5 @@ public class RouteHelper {
         return null;
     }
 
-    /**
-     * 构建哈希环
-     *
-     * @param url  ip:port
-     * @param data ip:port
-     */
-    private static void buildHashRing(String url, String data, Map<Integer, String> temporaryHashRing) {
-        for (int i = 0; i <= 100; i++) {
-            int serverHashCode = hashStrategy.getHashCode(url + i);
-            if (!temporaryHashRing.containsKey(serverHashCode)) {//冲突了继续
-                temporaryHashRing.put(serverHashCode, data);
-            } else {
-                continue;
-            }
-            if (VIRTUAL_NODE_SIZE <= 0) {
-                VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
-                return;
-            }
-            VIRTUAL_NODE_SIZE--;
-        }
-    }
 
 }
