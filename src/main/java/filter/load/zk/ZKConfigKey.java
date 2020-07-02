@@ -8,7 +8,7 @@ package filter.load.zk;
  */
 public interface ZKConfigKey {
 
-    String filterServer = "FilterServer";
+    String filterServer = "filterServer";
 
     String filterServerPath = "/filter";
 

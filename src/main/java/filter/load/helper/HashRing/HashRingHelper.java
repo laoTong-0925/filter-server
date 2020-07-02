@@ -1,4 +1,4 @@
-package filter.load.hash.HashRing;
+package filter.load.helper.HashRing;
 
 import filter.load.hash.CRCHashStrategy;
 import filter.load.hash.HashStrategy;
@@ -23,9 +23,6 @@ public class HashRingHelper {
     private static final HashStrategy hashStrategy = new CRCHashStrategy();
 
     private static Integer VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
-
-    private HashRingHelper() {
-    }
 
     /**
      * 是否加载user数据

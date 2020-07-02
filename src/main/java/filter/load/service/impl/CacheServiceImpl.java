@@ -1,15 +1,13 @@
 package filter.load.service.impl;
 
-import filter.load.TestData;
+import filter.load.MatchFilterThriftServer;
 import filter.load.bitMap.SyncRoaringBitmap;
-import filter.load.hash.HashRing.HashRingHelper;
+import filter.load.helper.HashRing.HashRingHelper;
 import filter.load.model.LocalServer;
 import filter.load.model.ServerHashRange;
 import filter.load.model.ServerNode;
 import filter.load.service.CacheService;
 import filter.load.zk.ZKFactory;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,7 +19,7 @@ import java.util.*;
  * @Date: 2020-06-20 00:37
  */
 @Service
-public class CacheServiceImpl implements CacheService, ApplicationListener<ContextRefreshedEvent> {
+public class CacheServiceImpl implements CacheService {
 
     private org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CacheServiceImpl.class);
 
@@ -52,8 +50,9 @@ public class CacheServiceImpl implements CacheService, ApplicationListener<Conte
     /**
      * 加载至BitMap
      */
-    private void loadToBitMap() {
-        Map<String, String> beginNode = TestData.beginNode;
+    @Override
+    public void loadToBitMap() {
+        Map<String, String> beginNode = MatchFilterThriftServer.beginNode;
 
         //哈希环
         System.out.println("-------loadServerRange------");
@@ -68,11 +67,11 @@ public class CacheServiceImpl implements CacheService, ApplicationListener<Conte
         logger.info("--------服务区间加载完毕--------");
         serverHashRangeList.forEach(e -> logger.info(e.toString()));
         bitmap = new HashMap<>();
-        List<Integer> users = Arrays.asList(TestData.users);
+        List<Integer> users = Arrays.asList(MatchFilterThriftServer.users);
         //todo 加载数据
         users.parallelStream().filter(this::isLoad).forEach(e -> {
             logger.info("加载用户：" + e.toString());
-            List<Integer> alohaRecd = new ArrayList<>(Arrays.asList(TestData.Aloha));
+            List<Integer> alohaRecd = new ArrayList<>(Arrays.asList(MatchFilterThriftServer.Aloha));
             //todo 查出记录
             SyncRoaringBitmap syncRoaringBitmap = new SyncRoaringBitmap();
             for (Integer integer : alohaRecd) {
@@ -93,14 +92,6 @@ public class CacheServiceImpl implements CacheService, ApplicationListener<Conte
         if (serverHashRangeList == null)
             return false;
         return HashRingHelper.isLoad(userId, serverHashRangeList);
-    }
-
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        if (contextRefreshedEvent == null)
-            return;
-        logger.info("spring上下文加载完毕");
-        loadToBitMap();
     }
 
 }

@@ -1,9 +1,7 @@
 package filter.load;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 
 /**
  * @ClassName : TestA
@@ -13,19 +11,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class TestA {
 
-    public static void main(String[] args) {
 
-        Logger logger = LoggerFactory.getLogger(TestA.class);
-
-        try {
-
-            TimeUnit.MINUTES.sleep(5);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            logger.warn("error", e);
-        } finally {
-            System.exit(0);
-        }
+    public static void main(String[] args) throws Exception {
+        InetAddress ip4 = Inet4Address.getLocalHost();
+        System.out.println(ip4.getHostAddress());
     }
-
 }
+

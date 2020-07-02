@@ -40,14 +40,7 @@ public class FilterServiceImpl {
             SyncRoaringBitmap syncRoaringBitmap = bitmap.get(key);
             resultSet = filterFromBitMap(userIds, syncRoaringBitmap);
         }
-        if (resultSet == null)
-            return null;
-        return filterFromRedis(key, resultSet);
-    }
-
-    private Set<Integer> filterFromRedis(int key, Set<Integer> userIds) {
-
-        return null;
+        return resultSet;
     }
 
     private Set<Integer> filterFromBitMap(Set<Integer> userIds, SyncRoaringBitmap bitmap) {

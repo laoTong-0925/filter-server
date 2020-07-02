@@ -1,5 +1,6 @@
 package filter.load;
 
+import filter.load.context.CUBeanFactory;
 import filter.load.service.CacheService;
 import filter.load.thrift.client.MatchFilterThriftServiceClient;
 import org.junit.Test;

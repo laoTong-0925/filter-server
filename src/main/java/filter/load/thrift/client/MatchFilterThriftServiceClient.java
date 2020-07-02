@@ -2,7 +2,7 @@ package filter.load.thrift.client;
 
 import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
-import filter.load.hash.HashRing.HashRingHelper;
+import filter.load.helper.HashRing.HashRingHelper;
 import filter.load.model.ServerNode;
 import filter.load.route.RouteHelper;
 import filter.load.thrift.Base.BaseFilterPoolThriftClient;
@@ -38,13 +38,17 @@ public class MatchFilterThriftServiceClient extends BaseFilterPoolThriftClient<M
     /**
      * 哈希环,响应callBack
      */
-    private static List<ServerNode> sortedHashRing;
+    private List<ServerNode> sortedHashRing;
 
+    /**
+     * 重载哈希环和连接池
+     */
     private void register() {
-        ZKFactory.registerCallback(ConfigStringListKeys.ThriftMatchFilterServer.name(),
+        ZKFactory.registerCallback(ZKConfigKey.filterServer,
                 (path, oldData, newData) -> {
                     if (StringUtils.isNotBlank(path) || StringUtils.isNotBlank(newData)) {
                         loadHashRing();
+                        reloadClientPoolMap();
                     } else {
                         logger.warn("新过滤服务路径为空或Data为空 path:{} newData:{}", path, newData);
                     }

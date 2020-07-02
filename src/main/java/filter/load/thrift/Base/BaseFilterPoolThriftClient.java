@@ -1,6 +1,5 @@
 package filter.load.thrift.Base;
 
-import com.wealoha.common.config.Config;
 import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
 import com.wealoha.thrift.ThriftClientPool;
@@ -17,7 +16,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @ClassName : BasePoolThriftClient
@@ -36,28 +34,26 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
     // host:port
     private Pattern p = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+):(\\d+)");
 
-    private void regCallBack() {
-        ZKFactory.registerCallback(getConfigKey().configKey() + ZKConfigKey.filterClientPool, (path, oldData, newData) -> {
-            logger.info("收到通知准备reload配置数据...");
-            try {
-                TimeUnit.SECONDS.sleep(10);
-            } catch (InterruptedException e) {
-                logger.error("error:", e);
-            }
-            List<String> oldServerList = serviceList;
-            List<ServiceInfo> servicesList = getServicesList();
-            if (CollectionUtils.isEmpty(servicesList)) {
-                logger.warn("无可用服务");
-                return;
-            }
-            PoolConfig config = getConfig();
-            logger.info("变更服务: old:{} ---> new:{}", oldServerList, servicesList);
-            //服务只会增加 servicesList > oldServerList
-            if (!CollectionUtils.isEmpty(oldServerList)) {
-                servicesList.removeAll(oldServerList);
-            }
-            servicesList.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, config)));
-        });
+    protected void reloadClientPoolMap() {
+        logger.info("收到通知准备reload配置数据...");
+        try {
+            TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException e) {
+            logger.error("error:", e);
+        }
+        List<String> oldServerList = serviceList;
+        List<ServiceInfo> servicesList = getServicesList();
+        if (CollectionUtils.isEmpty(servicesList)) {
+            logger.warn("无可用服务");
+            return;
+        }
+        PoolConfig config = getConfig();
+        logger.info("变更服务: old:{} ---> new:{}", oldServerList, servicesList);
+        //服务只会增加 servicesList > oldServerList
+        if (!CollectionUtils.isEmpty(oldServerList)) {
+            servicesList.removeAll(oldServerList);
+        }
+        servicesList.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, config)));
     }
 
     /**
@@ -112,7 +108,6 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
                     }
                     PoolConfig config = getConfig();
                     services.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, config)));
-                    regCallBack();
                     logger.info("服务初始化完成");
                 }
             }
