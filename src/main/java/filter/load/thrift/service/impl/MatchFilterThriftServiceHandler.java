@@ -1,5 +1,6 @@
 package filter.load.thrift.service.impl;
 
+import filter.load.model.LocalServer;
 import filter.load.thrift.service.MatchFilterThriftService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ public class MatchFilterThriftServiceHandler implements MatchFilterThriftService
 
     @Override
     public Set<Integer> findNotExist(int userId, Set<Integer> userIds) {
+        logger.info("---{}--收到请求----", LocalServer.getIp());
         if (userId == 0 && CollectionUtils.isEmpty(userIds))
             return null;
         return filterService.filter(userId, userIds);

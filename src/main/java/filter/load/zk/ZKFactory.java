@@ -113,7 +113,7 @@ public class ZKFactory implements Watcher {
 
     public static void registerHashRingNode(String url, String data) {
         try {
-            String wholePath = ZKConfigKey.filterServerPath + "/" + url + ConfigStringListKeys.ThriftMatchFilterServer.name();
+            String wholePath = ZKConfigKey.filterServerPath + "/" + url;
             if (getInstance().zooKeeper.exists(wholePath, false) == null) {
                 log.debug("notify by create path: wholePath={}, data={}", wholePath, data);
                 getInstance().zooKeeper.create(wholePath, data.getBytes(),

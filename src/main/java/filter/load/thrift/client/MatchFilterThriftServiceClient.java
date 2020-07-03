@@ -3,6 +3,7 @@ package filter.load.thrift.client;
 import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
 import filter.load.helper.HashRing.HashRingHelper;
+import filter.load.model.LocalServer;
 import filter.load.model.ServerNode;
 import filter.load.route.RouteHelper;
 import filter.load.thrift.Base.BaseFilterPoolThriftClient;
@@ -56,6 +57,7 @@ public class MatchFilterThriftServiceClient extends BaseFilterPoolThriftClient<M
     }
 
     private void loadHashRing() {
+        logger.info("client 开始加载哈希环  构建RPC连接池");
         Map<String, String> realNodeMap = ZKFactory.getAllNode(ZKConfigKey.filterServerPath);
         if (realNodeMap == null) {
             logger.warn("ZK获取不到过滤服务！！！");
@@ -64,7 +66,10 @@ public class MatchFilterThriftServiceClient extends BaseFilterPoolThriftClient<M
         logger.info("从ZK获取过滤服务节点为:{}", realNodeMap);
         List<Integer> thisServerForHashRing = new ArrayList<>();
         sortedHashRing = HashRingHelper.reloadHashRing(realNodeMap, thisServerForHashRing);
-        logger.info("新hash环,{}", sortedHashRing);
+        logger.info("---------------客户端加载新Hash环---------------");
+        logger.info("------ | 0 ");
+        sortedHashRing.forEach(e -> logger.info("------ | {}   url:{}", e.getHash(), e.getUrl()));
+        logger.info("------ | I.Max ");
     }
 
     /**
@@ -88,6 +93,7 @@ public class MatchFilterThriftServiceClient extends BaseFilterPoolThriftClient<M
         ServerNode serverNode = RouteHelper.routeServer(userId, sortedHashRing);
         if (serverNode == null)
             return null;
+        System.out.println("客户端获得调用节点 " + serverNode.getUrl());
         MatchFilterThriftService.Iface client = null;
         List<String> serverList = getServicesList().stream().map(this::getUrl).collect(Collectors.toList());
         for (String e : serverList) {
@@ -104,6 +110,7 @@ public class MatchFilterThriftServiceClient extends BaseFilterPoolThriftClient<M
         }
         if (client != null) {
             try {
+                logger.info("---{}--发出请求----", LocalServer.getIp());
                 return client.findNotExist(userId, userIds);
             } catch (TException e) {
                 logger.error("FilterServerClient.findNotExit() 调用失败 error", e);

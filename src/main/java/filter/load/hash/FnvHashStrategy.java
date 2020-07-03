@@ -23,6 +23,6 @@ public class FnvHashStrategy implements HashStrategy {
         hash ^= hash >> 17;
         hash += hash << 5;
         hash = Math.abs(hash);
-        return Math.abs(hash);
+        return hash;
     }
 }

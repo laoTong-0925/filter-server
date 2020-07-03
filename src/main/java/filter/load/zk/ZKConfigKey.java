@@ -12,10 +12,6 @@ public interface ZKConfigKey {
 
     String filterServerPath = "/filter";
 
-    String filterClientPool = "-ClientPool";
-
-    String filterServerHashRing = "-HashRing";
-
     int VIRTUAL_NODE_SIZE = 2;
 
 }

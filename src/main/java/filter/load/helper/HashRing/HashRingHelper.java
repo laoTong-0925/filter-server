@@ -1,7 +1,6 @@
 package filter.load.helper.HashRing;
 
-import filter.load.hash.CRCHashStrategy;
-import filter.load.hash.HashStrategy;
+import filter.load.hash.*;
 import filter.load.model.LocalServer;
 import filter.load.model.ServerHashRange;
 import filter.load.model.ServerNode;
@@ -23,6 +22,10 @@ public class HashRingHelper {
     private static final HashStrategy hashStrategy = new CRCHashStrategy();
 
     private static Integer VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
+
+    public static HashStrategy getHashStrategy() {
+        return hashStrategy;
+    }
 
     /**
      * 是否加载user数据
@@ -57,8 +60,6 @@ public class HashRingHelper {
             logger.warn("ZK上获取不到过滤服务！！！");
             return null;
         }
-        logger.info("获取所有实节点");
-        logger.info(realNodeMap.toString());
         Map<Integer, String> temporaryHasHhRing = new HashMap<>();
         realNodeMap.forEach((key, value) -> buildHashRingNode(key, value, thisServerForHashRing, temporaryHasHhRing));
         logger.info("本服务的节点");
@@ -79,7 +80,7 @@ public class HashRingHelper {
      */
     private static void buildHashRingNode(String url, String data, List<Integer> thisServerForHashRing, Map<Integer, String> temporaryHasHhRing) {
         for (int i = 0; i <= 100; i++) {
-            int serverHashCode = hashStrategy.getHashCode(url + i);
+            int serverHashCode = hashStrategy.getHashCode(data + i);
             if (!temporaryHasHhRing.containsKey(serverHashCode)) {//冲突了继续
                 temporaryHasHhRing.put(serverHashCode, data);
                 if (data.equals(LocalServer.getIp())) {

@@ -1,5 +1,6 @@
 package filter.load.route;
 
+import filter.load.helper.HashRing.HashRingHelper;
 import filter.load.model.ServerNode;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -22,13 +23,14 @@ public class RouteHelper {
     public static ServerNode routeServer(int key, List<ServerNode> sortedHashRing) {
         if (key == 0 || CollectionUtils.isEmpty(sortedHashRing))
             return null;
+        int hashCode = HashRingHelper.getHashStrategy().getHashCode(String.valueOf(key));
         int size = sortedHashRing.size();
         for (int i = 0; i < size; i++) {
             ServerNode head = sortedHashRing.get(0);
             ServerNode tail = sortedHashRing.get(size - 1);
-            if (head != null && tail != null && (key <= head.getHash() || key > tail.getHash())) {//边界处理
+            if (head != null && tail != null && (hashCode <= head.getHash() || hashCode > tail.getHash())) {//边界处理
                 return head;
-            } else if (key <= sortedHashRing.get(i).getHash() && key > sortedHashRing.get(i - 1).getHash()) {
+            } else if (hashCode <= sortedHashRing.get(i).getHash() && hashCode > sortedHashRing.get(i - 1).getHash()) {
                 return sortedHashRing.get(i);
             }
         }

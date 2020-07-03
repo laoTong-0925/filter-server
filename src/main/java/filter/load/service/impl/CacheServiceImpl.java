@@ -64,14 +64,19 @@ public class CacheServiceImpl implements CacheService {
         List<ServerNode> sortedHashRingList = HashRingHelper.reloadHashRing(beginNode, thisServerForHashRing);
         //区间
         serverHashRangeList = HashRingHelper.initRange(sortedHashRingList, thisServerForHashRing);
+        int i = serverHashRangeList.stream().mapToInt(e -> (e.getServerHash() - e.getBeforeServerHash())).sum();
+        System.out.println("覆盖范围 ：" +(double) i / (double) Integer.MAX_VALUE);
         logger.info("--------服务区间加载完毕--------");
         serverHashRangeList.forEach(e -> logger.info(e.toString()));
         bitmap = new HashMap<>();
-        List<Integer> users = Arrays.asList(MatchFilterThriftServer.users);
-        //todo 加载数据
-        users.parallelStream().filter(this::isLoad).forEach(e -> {
-            logger.info("加载用户：" + e.toString());
-            List<Integer> alohaRecd = new ArrayList<>(Arrays.asList(MatchFilterThriftServer.Aloha));
+
+        Set<Integer> keySet = MatchFilterThriftServer.dataMap.keySet();
+        List<Integer> users = new ArrayList<>(keySet);//所有的用户
+
+        //todo 加载数据 并行流有问题,
+        users.stream().filter(this::isLoad).forEach(e -> {
+            logger.info("加载用户：{}", e);
+            List<Integer> alohaRecd = MatchFilterThriftServer.dataMap.get(e);
             //todo 查出记录
             SyncRoaringBitmap syncRoaringBitmap = new SyncRoaringBitmap();
             for (Integer integer : alohaRecd) {

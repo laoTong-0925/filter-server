@@ -35,9 +35,9 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
     private Pattern p = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+):(\\d+)");
 
     protected void reloadClientPoolMap() {
-        logger.info("收到通知准备reload配置数据...");
+        logger.info("收到通知准备reload连接池数据...");
         try {
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(5);
         } catch (InterruptedException e) {
             logger.error("error:", e);
         }
@@ -53,7 +53,9 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
         if (!CollectionUtils.isEmpty(oldServerList)) {
             servicesList.removeAll(oldServerList);
         }
+        logger.info("client pool old size ：{}", clientPoolMap.size());
         servicesList.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, config)));
+        logger.info("client pool new size ：{}", clientPoolMap.size());
     }
 
     /**
