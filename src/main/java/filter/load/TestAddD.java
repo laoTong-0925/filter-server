@@ -21,7 +21,7 @@ public class TestAddD {
 
     public static void main(String[] args) {
         int port = 1104;
-        LocalServer localServer = new LocalServer("127.0.0.1:" + port);
+        LocalServer localServer = new LocalServer("127.0.0.1:" + port,true);
         CacheService cacheService = CUBeanFactory.getBean(CacheService.class);
         MatchFilterThriftServiceHandler handler = CUBeanFactory.getBean(MatchFilterThriftServiceHandler.class);
         cacheService.loadToBitMap();

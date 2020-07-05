@@ -56,7 +56,8 @@ public class FilterServiceImpl {
     private Set<Integer> filterFromDB(int key, Set<Integer> userIds) {
         List<Integer> list = MatchFilterThriftServer.dataMap.get(key);
         //TODO 异步 写入BitMap
-        userIds.removeAll(list);
+        if (!CollectionUtils.isEmpty(list))
+            userIds.removeAll(list);
         return userIds;
     }
 

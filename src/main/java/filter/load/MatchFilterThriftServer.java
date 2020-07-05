@@ -2,6 +2,8 @@ package filter.load;
 
 import filter.load.context.CUBeanFactory;
 import filter.load.thrift.client.MatchFilterThriftServiceClient;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.*;
 
@@ -19,7 +21,6 @@ public class MatchFilterThriftServer {
         beginNode.put("127.0.0.1:1103", "127.0.0.1:1103");
         beginNode.put("127.0.0.1:1101", "127.0.0.1:1101");
         beginNode.put("127.0.0.1:1102", "127.0.0.1:1102");
-//        beginNode.put("127.0.0.1:1104", "127.0.0.1:1104");
         dataMap = new HashMap<>();
         for (int i = 0; i < 100; i++) {
             List<Integer> list = new ArrayList<>();
@@ -41,13 +42,23 @@ public class MatchFilterThriftServer {
 //        System.out.println(size);
 
         MatchFilterThriftServiceClient client = CUBeanFactory.getBean(MatchFilterThriftServiceClient.class);
-        Set<Integer> set = new HashSet<>();
-        set.add(111);
-        set.add(8002);
-        set.add(1);
 
-        Set<Integer> notExit = client.findNotExit(8001, set);
-        System.out.println(notExit);
+
+        Scanner sc = new Scanner(System.in);
+        while (true){
+
+            String input = sc.next();
+            // uid|id,id,id
+            String[] parts = StringUtils.split(input, "|");
+            int uid = NumberUtils.toInt(parts[0]);
+            String[] idStrList = StringUtils.split(parts[1], ",");
+            HashSet<Integer> set = new HashSet<>();
+            for(String str : idStrList){
+                set.add(NumberUtils.toInt(str));
+            }
+            Set<Integer> notExit = client.findNotExit(uid, set);
+            System.out.println(notExit);
+        }
 
 
     }

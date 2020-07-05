@@ -19,7 +19,7 @@ public class HashRingHelper {
 
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashRingHelper.class);
 
-    private static final HashStrategy hashStrategy = new CRCHashStrategy();
+    private static final HashStrategy hashStrategy = new FnvHashStrategy();
 
     private static Integer VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
 

@@ -7,6 +7,7 @@ import filter.load.model.LocalServer;
 import filter.load.model.ServerHashRange;
 import filter.load.model.ServerNode;
 import filter.load.service.CacheService;
+import filter.load.zk.ZKConfigKey;
 import filter.load.zk.ZKFactory;
 import org.springframework.stereotype.Service;
 
@@ -52,8 +53,15 @@ public class CacheServiceImpl implements CacheService {
      */
     @Override
     public void loadToBitMap() {
-        Map<String, String> beginNode = MatchFilterThriftServer.beginNode;
-
+        Map<String, String> beginNode;
+        if (LocalServer.getIsNew()) {
+            String ip = LocalServer.getIp();
+            logger.info("-----------新增服务---{}------", ip);
+            beginNode = ZKFactory.getAllNode(ZKConfigKey.filterServerPath);
+            beginNode.put(ip, ip);
+        } else {
+            beginNode = MatchFilterThriftServer.beginNode;
+        }
         //哈希环
         System.out.println("-------loadServerRange------");
         if (beginNode == null)
@@ -65,7 +73,7 @@ public class CacheServiceImpl implements CacheService {
         //区间
         serverHashRangeList = HashRingHelper.initRange(sortedHashRingList, thisServerForHashRing);
         int i = serverHashRangeList.stream().mapToInt(e -> (e.getServerHash() - e.getBeforeServerHash())).sum();
-        System.out.println("覆盖范围 ：" +(double) i / (double) Integer.MAX_VALUE);
+        System.out.println("覆盖范围 ：" + (double) i / (double) Integer.MAX_VALUE);
         logger.info("--------服务区间加载完毕--------");
         serverHashRangeList.forEach(e -> logger.info(e.toString()));
         bitmap = new HashMap<>();

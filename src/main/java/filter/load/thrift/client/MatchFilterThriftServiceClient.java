@@ -45,15 +45,10 @@ public class MatchFilterThriftServiceClient extends BaseFilterPoolThriftClient<M
      * 重载哈希环和连接池
      */
     private void register() {
-        ZKFactory.registerCallback(ZKConfigKey.filterServer,
-                (path, oldData, newData) -> {
-                    if (StringUtils.isNotBlank(path) || StringUtils.isNotBlank(newData)) {
-                        loadHashRing();
-                        reloadClientPoolMap();
-                    } else {
-                        logger.warn("新过滤服务路径为空或Data为空 path:{} newData:{}", path, newData);
-                    }
-                });
+        ZKFactory.registerCallback(ZKConfigKey.filterServer, () -> {
+            loadHashRing();
+            reloadClientPoolMap();
+        });
     }
 
     private void loadHashRing() {

@@ -7,10 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -156,6 +153,9 @@ public class ZKFactory implements Watcher {
 
 
         if (reload) {
+            String zkPath = event.getPath();
+            if (StringUtils.isBlank(zkPath))
+                return;
             try {
                 log.info("reload notify config for event({}): {}, {}", ZKConfigKey.filterServerPath,
                         event.getType(), event);
@@ -167,35 +167,25 @@ public class ZKFactory implements Watcher {
                 // 获取新值
                 reload();
 
-                // 比较变更
-                for (Map.Entry<String, String> entry : ZKData.entrySet()) {
-                    String path = "/" + entry.getKey();
-                    String path1 = entry.getKey();
-                    String oldData = oldMap.get(path1);
-                    String newData = entry.getValue();
-
-                    if (!StringUtils.equals(oldData, newData)) {
-                        log.info("变更 path:{} {}--->{}", path, oldData, newData);
-                        // raw数据里有时间戳，不一致就通知
-                        NotifyCallback cb = callbackMap.get(path);
-                        if (null == cb) {
-                            callbackMap.entrySet().stream()
-                                    .filter(e -> e.getKey().contains(ZKConfigKey.filterServer))
-                                    .forEach(e -> {
-                                        NotifyCallback callback = e.getValue();
-                                        log.info("通知 {} 进行重新计算hash环 ", e.getKey());
-                                        callback.onChange(path, oldData, newData);
-                                    });
-                            break;
-                        }
-                        log.info("通知变更: callback={}, path={}, data={} -> {}",
-                                cb.getClass().getName(), path, oldData, newData);
-                        try {
-                            cb.onChange(path, oldData, newData);
-                        } catch (Throwable t) {
-                            log.warn("通知处理失败", t);
-                        }
+                oldMap.keySet().forEach(e -> {
+                    if (!ZKData.containsKey(e)) {
+                        log.warn("{} 服务从ZK获取不到，服务可能挂了，请尽快处理！！！", e);
                     }
+                });
+                for (String s : ZKData.keySet()) {
+                    if (!oldMap.containsKey(s)) {
+                        log.info("新增过滤服务 {}", s);
+                        log.info("收到事件路径 {}", zkPath);
+                    }
+                }
+                if (zkPath.contains(ZKConfigKey.filterServerPath)) {
+                    callbackMap.entrySet().stream()
+                            .filter(e -> e.getKey().contains(ZKConfigKey.filterServer))
+                            .forEach(e -> {
+                                NotifyCallback callback = e.getValue();
+                                log.info("通知 {} 进行重新计算hash环,构建连接池", e.getKey());
+                                callback.onChange();
+                            });
                 }
             } catch (Exception e) {
                 log.error("事件处理失败", e);
