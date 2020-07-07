@@ -8,5 +8,6 @@
     <!-- annotation支持 -->
     <context:annotation-config/>
     <!-- 扫描的文件夹 -->
-    <context:component-scan base-package="filter.load"/>
+    <context:component-scan base-package="im.cu"/>
+
 </beans>
