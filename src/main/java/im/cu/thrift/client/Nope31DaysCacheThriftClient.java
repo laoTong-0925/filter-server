@@ -3,11 +3,10 @@ package im.cu.thrift.client;
 import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
 import im.cu.helper.HashRing.HashRingHelper;
-import im.cu.match_vala.cache_v3.thrift.gen.MutableNope31DaysCacheThriftService;
-import im.cu.model.LocalServer;
 import im.cu.model.ServerNode;
 import im.cu.route.RouteHelper;
 import im.cu.thrift.Base.BaseFilterPoolThriftClient;
+import im.cu.thrift.service.Nope31DaysCacheThriftService;
 import im.cu.zk.ConfigStringListKeys;
 import im.cu.zk.ZKConfigKey;
 import im.cu.zk.ZKFactory;
@@ -31,7 +30,7 @@ import java.util.Set;
  * @Date: 2020-06-28 12:38
  */
 @Service
-public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<MutableNope31DaysCacheThriftService.Client> {
+public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Nope31DaysCacheThriftService.Client> {
 
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Nope31DaysCacheThriftClient.class);
 
@@ -88,18 +87,18 @@ public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Muta
         if (serverNode == null)
             return null;
         System.out.println("客户端获得调用节点 " + serverNode.getUrl());
-        String[] split = StringUtils.split(serverNode.getUrl());
+        String[] split = StringUtils.split(serverNode.getUrl(), ":");
         if (split.length != 2 || StringUtils.isBlank(split[0]) || StringUtils.isBlank(split[1])) {
             logger.warn("user {} 获取到的服务存在问题 severNode:{}", userId, serverNode);
             return null;
         }
-        MutableNope31DaysCacheThriftService.Iface client = getClientPool(new ServiceInfo(split[0], Integer.parseInt(split[1]))).iface();
+        Nope31DaysCacheThriftService.Iface client = getClientPool(new ServiceInfo(split[0], Integer.parseInt(split[1]))).iface();
         if (client == null) {
             logger.warn("获取到空的client userId:{}", userId);
             return null;
         }
         try {
-            logger.info("---{}--发出请求----", LocalServer.getIp());
+            logger.info("-----发出请求----");
             return client.findExists(userId, userIds);
         } catch (TException e) {
             logger.error("FilterServerClient.findNotExit() 调用失败 error", e);
@@ -114,8 +113,8 @@ public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Muta
     }
 
     @Override
-    protected MutableNope31DaysCacheThriftService.Client getClient(TTransport transport) {
-        return new MutableNope31DaysCacheThriftService.Client(new TBinaryProtocol(new TFramedTransport(transport)));
+    protected Nope31DaysCacheThriftService.Client getClient(TTransport transport) {
+        return new Nope31DaysCacheThriftService.Client(new TBinaryProtocol(new TFramedTransport(transport)));
     }
 
     @Override
