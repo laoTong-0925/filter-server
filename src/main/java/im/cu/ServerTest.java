@@ -1,12 +1,12 @@
 package im.cu;
 
 
+import im.cu.base.constants.ConfigStringListKeys;
 import im.cu.framework.helper.CUBeanFactory;
-import im.cu.model.LocalServer;
-import im.cu.thrift.Base.ThriftBasedServiceServer;
+import im.cu.framework.thrift.ThriftBasedServiceServer;
+import im.cu.model.system.LocalServer;
 import im.cu.thrift.service.Nope31DaysCacheThriftService;
 import im.cu.thrift.service.handler.Nope31DaysCacheThriftServerHandler;
-import im.cu.zk.ZKFactory;
 
 /**
  * @ClassName : TestA
@@ -24,23 +24,22 @@ public class ServerTest {
         }
         int port = Integer.parseInt(args[1]);
         String url = args[0] + ":" + port;
+        ConfigStringListKeys stringListKeys = ConfigStringListKeys.ThriftMutableNope31DaysCacheServerV2;
         if (Boolean.parseBoolean(args[2])) {
             new LocalServer(url, true);
         } else {
-
             new LocalServer(url);
         }
         Nope31DaysCacheThriftServerHandler handler = CUBeanFactory.getBean(Nope31DaysCacheThriftServerHandler.class);
         //加载缓存来自磁盘
         handler.init();
         Nope31DaysCacheThriftService.Processor<Nope31DaysCacheThriftServerHandler> processor = new Nope31DaysCacheThriftService.Processor<>(handler);
-        new ThriftBasedServiceServer(
+        new ThriftBasedServiceServer(stringListKeys,
                 processor,
                 port,
                 true,
                 true,
                 true);
-        ZKFactory.registerHashRingNode(LocalServer.getIp(), LocalServer.getIp());
     }
 }
 

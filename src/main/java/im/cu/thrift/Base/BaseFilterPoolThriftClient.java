@@ -1,11 +1,10 @@
 package im.cu.thrift.Base;
 
+import com.wealoha.common.config.Config;
 import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
 import com.wealoha.thrift.ThriftClientPool;
-import im.cu.zk.ConfigStringListKeys;
-import im.cu.zk.ZKConfigKey;
-import im.cu.zk.ZKFactory;
+import im.cu.base.constants.ConfigStringListKeys;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.thrift.TServiceClient;
 import org.apache.thrift.transport.TTransport;
@@ -135,9 +134,7 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
     }
 
     protected List<ServiceInfo> getServicesList() {
-        Map<String, String> allNode = ZKFactory.getAllNode(ZKConfigKey.filterServerNopePath);
-        List<String> list = new ArrayList<>(allNode.values());
-//        List<String> list = Config.instance.get(getConfigKey());
+        List<String> list = Config.instance.get(getConfigKey());
         List<ServiceInfo> services = new ArrayList<>();
         for (String item : list) {
             Matcher matcher = p.matcher(item);

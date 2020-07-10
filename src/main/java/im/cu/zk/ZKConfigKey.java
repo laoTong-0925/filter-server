@@ -8,10 +8,6 @@ package im.cu.zk;
  */
 public interface ZKConfigKey {
 
-    String filterServer = "filterServer";
-
-    String filterServerNopePath = "/filter/nope";
-
     int VIRTUAL_NODE_SIZE = 2;
 
 }

@@ -1,18 +1,17 @@
 package im.cu.service.impl;
 
-import im.cu.BeginNode;
+import com.wealoha.common.config.Config;
+import im.cu.base.constants.ConfigStringListKeys;
 import im.cu.helper.HashRing.HashRingHelper;
-import im.cu.model.LocalServer;
 import im.cu.model.ServerHashRange;
 import im.cu.model.ServerNode;
-import im.cu.service.CacheService;
-import im.cu.zk.ZKConfigKey;
-import im.cu.zk.ZKFactory;
+import im.cu.model.system.BeginNode;
+import im.cu.model.system.LocalServer;
+import im.cu.service.RangeService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @ClassName : LoadCacheHelper
@@ -21,7 +20,7 @@ import java.util.Map;
  * @Date: 2020-06-20 00:37
  */
 @Service
-public class RangeServiceImpl implements CacheService {
+public class RangeServiceImpl implements RangeService {
 
     private org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RangeServiceImpl.class);
 
@@ -35,12 +34,12 @@ public class RangeServiceImpl implements CacheService {
      */
     @Override
     public void loadHashRange() {
-        Map<String, String> beginNode;
+        List<String> beginNode;
         if (LocalServer.getIsNew()) {
             String ip = LocalServer.getIp();
             logger.info("-----------新增服务---{}------", ip);
-            beginNode = ZKFactory.getAllNode(ZKConfigKey.filterServerNopePath);
-            beginNode.put(ip, ip);
+            beginNode = Config.instance.get(ConfigStringListKeys.ThriftMutableNope31DaysCacheServerV2);
+            beginNode.add(ip);
         } else {
             beginNode = BeginNode.beginNode;
         }

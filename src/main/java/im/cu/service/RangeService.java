@@ -1,7 +1,7 @@
 package im.cu.service;
 
 
-public interface CacheService {
+public interface RangeService {
 
     void loadHashRange();
 

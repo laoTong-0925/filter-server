@@ -2,10 +2,11 @@ package im.cu.helper.HashRing;
 
 import im.cu.hash.FnvHashStrategy;
 import im.cu.hash.HashStrategy;
-import im.cu.model.LocalServer;
 import im.cu.model.ServerHashRange;
 import im.cu.model.ServerNode;
+import im.cu.model.system.LocalServer;
 import im.cu.zk.ZKConfigKey;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,16 +54,16 @@ public class HashRingHelper {
     }
 
     /**
-     * @param realNodeMap    实节点
+     * @param realNodeList 实节点
      * @return List<HashRingNode> 新哈希环
      */
-    public static List<ServerNode> reloadHashRing(Map<String, String> realNodeMap, List<Integer> thisServerForHashRing) {
-        if (realNodeMap == null) {
+    public static List<ServerNode> reloadHashRing(List<String> realNodeList, List<Integer> thisServerForHashRing) {
+        if (CollectionUtils.isEmpty(realNodeList)) {
             logger.warn("ZK上获取不到过滤服务！！！");
             return null;
         }
         Map<Integer, String> temporaryHasHhRing = new HashMap<>();
-        realNodeMap.forEach((key, value) -> buildHashRingNode(key, value, thisServerForHashRing, temporaryHasHhRing));
+        realNodeList.forEach(e -> buildHashRingNode(e, thisServerForHashRing, temporaryHasHhRing));
         logger.info("本服务的节点");
         thisServerForHashRing.forEach(e -> logger.info(e.toString()));
         //排序造环
@@ -76,15 +77,14 @@ public class HashRingHelper {
      * 构建虚节点，并保存本服务的节点
      *
      * @param url                   ip:port
-     * @param data                  ip:port
      * @param thisServerForHashRing 哈希环上本服务的节点
      */
-    private static void buildHashRingNode(String url, String data, List<Integer> thisServerForHashRing, Map<Integer, String> temporaryHasHhRing) {
+    private static void buildHashRingNode(String url, List<Integer> thisServerForHashRing, Map<Integer, String> temporaryHasHhRing) {
         for (int i = 0; i <= 100; i++) {
-            int serverHashCode = hashStrategy.getHashCode(data + i);
+            int serverHashCode = hashStrategy.getHashCode(url + i);
             if (!temporaryHasHhRing.containsKey(serverHashCode)) {//冲突了继续
-                temporaryHasHhRing.put(serverHashCode, data);
-                if (data.equals(LocalServer.getIp())) {
+                temporaryHasHhRing.put(serverHashCode, url);
+                if (url.equals(LocalServer.getIp())) {
                     thisServerForHashRing.add(serverHashCode);
                 }
             } else {

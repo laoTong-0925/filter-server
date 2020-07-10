@@ -1,15 +1,15 @@
 package im.cu.thrift.client;
 
+import com.wealoha.common.config.Config;
+import com.wealoha.common.notify.NotifyByZookeeper;
 import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
+import im.cu.base.constants.ConfigStringListKeys;
 import im.cu.helper.HashRing.HashRingHelper;
 import im.cu.model.ServerNode;
 import im.cu.route.RouteHelper;
 import im.cu.thrift.Base.BaseFilterPoolThriftClient;
 import im.cu.thrift.service.Nope31DaysCacheThriftService;
-import im.cu.zk.ConfigStringListKeys;
-import im.cu.zk.ZKConfigKey;
-import im.cu.zk.ZKFactory;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.TException;
@@ -20,8 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @ClassName : FilterServerClient
@@ -43,22 +43,29 @@ public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Nope
      * 重载哈希环和连接池
      */
     private void register() {
-        ZKFactory.registerCallback(ZKConfigKey.filterServer, () -> {
-            loadHashRing();
-            reloadClientPoolMap();
-        });
+        NotifyByZookeeper.registerCallback(getConfigKey().configKey(),
+                (oldData, newData) -> {
+                    //处理新的url数据为List
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    List<String> list = Config.instance.get(getConfigKey());
+                    loadHashRing(list);
+                    reloadClientPoolMap();
+                });
     }
 
-    private void loadHashRing() {
+    private void loadHashRing(List<String> realNodeList) {
         logger.info("client 开始加载哈希环  构建RPC连接池");
-        Map<String, String> realNodeMap = ZKFactory.getAllNode(ZKConfigKey.filterServerNopePath);
-        if (realNodeMap == null) {
+        if (CollectionUtils.isEmpty(realNodeList)) {
             logger.warn("ZK获取不到过滤服务！！！");
             return;
         }
-        logger.info("从ZK获取过滤服务节点为:{}", realNodeMap);
+        logger.info("从ZK获取过滤服务节点为:{}", realNodeList);
         List<Integer> thisServerForHashRing = new ArrayList<>();
-        sortedHashRing = HashRingHelper.reloadHashRing(realNodeMap, thisServerForHashRing);
+        sortedHashRing = HashRingHelper.reloadHashRing(realNodeList, thisServerForHashRing);
         logger.info("---------------客户端加载新Hash环---------------");
         logger.info("------ | 0 ");
         sortedHashRing.forEach(e -> logger.info("------ | {}   url:{}", e.getHash(), e.getUrl()));
@@ -78,7 +85,8 @@ public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Nope
         if (sortedHashRing == null) {
             synchronized (this) {
                 if (sortedHashRing == null) {
-                    loadHashRing();
+                    List<String> list = Config.instance.get(getConfigKey());
+                    loadHashRing(list);
                     register();
                 }
             }
@@ -109,7 +117,7 @@ public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Nope
 
     @Override
     protected ConfigStringListKeys getConfigKey() {
-        return ConfigStringListKeys.ThriftMutableNope31DaysCacheServer;
+        return ConfigStringListKeys.ThriftMutableNope31DaysCacheServerV2;
     }
 
     @Override

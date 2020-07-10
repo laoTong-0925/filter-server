@@ -7,7 +7,7 @@ import im.cu.match.recent.relation.cache.bitmap.SyncRoaringBitmap;
 import im.cu.match_vala.cache.disk.StoreHelper;
 import im.cu.match_vala.cache.disk.StoreMeta;
 import im.cu.match_vala.cache.disk.exception.StoreMetaPersistFailException;
-import im.cu.model.LocalServer;
+import im.cu.model.system.LocalServer;
 import im.cu.service.impl.RangeServiceImpl;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
@@ -34,9 +34,9 @@ public class Nope31DaysCacheWriterRunner {
             System.exit(0);
         }
         int port = 1103;
-        new LocalServer("127.0.0.1:" + port, true);
-//        new LocalServer("127.0.0.1:" + port);
-        CacheService cacheService = CUBeanFactory.getBean(RangeServiceImpl.class);
+        new LocalServer("192.168.0.113:" + port, true);
+//        new LocalServer("192.168.0.113:" + port);
+        RangeService cacheService = CUBeanFactory.getBean(RangeServiceImpl.class);
         NopeLoadHelper nopeLoadHelper = CUBeanFactory.getBean(NopeLoadHelper.class);
         ExecutorService executorService = ExecutorsEx.newFixedThreadPool(8);
         String prefix = "mutable-nope31";

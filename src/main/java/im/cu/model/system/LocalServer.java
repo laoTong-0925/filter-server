@@ -1,4 +1,4 @@
-package im.cu.model;
+package im.cu.model.system;
 
 /**
  * @ClassName : LocalServer
