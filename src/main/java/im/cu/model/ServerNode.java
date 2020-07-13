@@ -1,5 +1,8 @@
 package im.cu.model;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 /**
  * @ClassName : HashRingNode
  * @Description : 哈希环上的结点
@@ -16,20 +19,17 @@ public class ServerNode {
         return url;
     }
 
-    public Integer getHash() {
+    public int getHash() {
         return hash;
     }
 
-    public ServerNode(Integer hash, String url) {
+    public ServerNode(int hash, String url) {
         this.hash = hash;
         this.url = url;
     }
 
     @Override
     public String toString() {
-        return "HashRingNode{" +
-                "hash=" + hash +
-                ", url='" + url + '\'' +
-                '}';
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
     }
 }

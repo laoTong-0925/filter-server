@@ -1,5 +1,7 @@
 package im.cu.model.system;
 
+import java.util.List;
+
 /**
  * @ClassName : LocalServer
  * @Description :
@@ -8,23 +10,23 @@ package im.cu.model.system;
  */
 public class LocalServer {
 
-    private static String ip;
-    private static boolean isNew;
+    private static String url;
+    public static List<String> beginNode;
 
-    public static String getIp() {
-        return ip;
+    public static String getUrl() {
+        return url;
     }
 
-    public static boolean getIsNew() {
-        return isNew;
+    public static List<String> getBeginNode() {
+        return beginNode;
     }
 
-    public LocalServer(String ip, boolean isNew) {
-        LocalServer.ip = ip;
-        LocalServer.isNew = isNew;
+    public LocalServer(String url, List<String> beginNode) {
+        LocalServer.url = url;
+        LocalServer.beginNode = beginNode;
     }
 
     public LocalServer(String ip) {
-        this(ip, false);
+        this(ip, null);
     }
 }

@@ -1,4 +1,4 @@
-package im.cu.thrift.Base;
+package im.cu.thrift.base;
 
 import com.wealoha.common.config.Config;
 import com.wealoha.thrift.PoolConfig;
@@ -28,7 +28,7 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
 
     private Map<String, ThriftClientPool<T>> clientPoolMap;
 
-    private List<String> serviceList;
+    private List<ServiceInfo> serviceList;
 
     // host:port
     private Pattern p = Pattern.compile("(\\d+\\.\\d+\\.\\d+\\.\\d+):(\\d+)");
@@ -36,24 +36,28 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
     protected void reloadClientPoolMap() {
         logger.info("收到通知准备reload连接池数据...");
         try {
-            TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException e) {
-            logger.error("error:", e);
-        }
-        List<String> oldServerList = serviceList;
+            TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException e) {}
+        List<ServiceInfo> oldServerList = serviceList;
         List<ServiceInfo> servicesList = getServicesList();
         if (CollectionUtils.isEmpty(servicesList)) {
             logger.warn("无可用服务");
             return;
         }
-        PoolConfig config = getConfig();
         logger.info("变更服务: old:{} ---> new:{}", oldServerList, servicesList);
         //服务只会增加 servicesList > oldServerList
         if (!CollectionUtils.isEmpty(oldServerList)) {
             servicesList.removeAll(oldServerList);
         }
+        if (clientPoolMap == null) {
+            synchronized (this){
+                if (clientPoolMap == null){
+                    clientPoolMap = new HashMap<>();
+                }
+            }
+        }
         logger.info("client pool old size ：{}", clientPoolMap.size());
-        servicesList.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, config)));
+        servicesList.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, getConfig())));
         logger.info("client pool new size ：{}", clientPoolMap.size());
     }
 
@@ -107,8 +111,7 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
                     if (services.size() == 0) {
                         throw new RuntimeException("服务初始化失败,未找到任何可用服务");
                     }
-                    PoolConfig config = getConfig();
-                    services.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, config)));
+                    services.forEach(e -> clientPoolMap.put(getUrl(e), new ThriftClientPool<>(Collections.singletonList(e), this::getClient, getConfig())));
                     logger.info("服务初始化完成");
                 }
             }
@@ -145,7 +148,7 @@ public abstract class BaseFilterPoolThriftClient<T extends TServiceClient> {
                 logger.info("添加一个服务： {}:{}", host, port);
             }
         }
-        serviceList = list;
+        serviceList = services;
         return services;
     }
 

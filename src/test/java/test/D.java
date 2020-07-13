@@ -1,8 +1,11 @@
-package im.cu;
+package test;
 
 import com.wealoha.common.config.Config;
+import com.wealoha.thrift.ServiceInfo;
 import im.cu.base.constants.ConfigStringListKeys;
+import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -27,4 +30,26 @@ public class D {
             }
         }
     }
+
+    @Test
+    public void addAll() {
+
+        try {
+            // TODO
+            List<ServiceInfo> servicesList = new ArrayList<>();
+            List<ServiceInfo> s = new ArrayList<>();
+            s.add(new ServiceInfo("1", 1));
+
+            servicesList.add(new ServiceInfo("1", 1));
+            servicesList.add(new ServiceInfo("2", 2));
+            servicesList.add(new ServiceInfo("3", 3));
+            servicesList.removeAll(s);
+            System.out.println(servicesList);
+
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

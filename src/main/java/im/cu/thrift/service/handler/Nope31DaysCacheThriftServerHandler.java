@@ -1,7 +1,7 @@
 package im.cu.thrift.service.handler;
 
-import im.cu.match_vala.cache_v3.MutableNope31DaysCacheService;
-import im.cu.thrift.service.Nope31DaysCacheThriftService;
+import im.cu.service.impl.Nope31DaysCacheService;
+import im.cu.thrift.service.gen.Nope31DaysCacheThriftService;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,20 +21,20 @@ public class Nope31DaysCacheThriftServerHandler implements Nope31DaysCacheThrift
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private MutableNope31DaysCacheService mutableNope31DaysCacheService;
+    private Nope31DaysCacheService nope31DaysCacheService;
 
     /**
      * 从磁盘加载数据
      */
     public void init() {
-        mutableNope31DaysCacheService.initFromDisk();
+        nope31DaysCacheService.initFromDisk();
     }
 
     @Override
     public Set<Integer> findExists(int userId, List<Integer> userIds) throws TException {
         try {
             logger.info("收到--{}---请求", userId);
-            return mutableNope31DaysCacheService.findExists(userId, userIds);
+            return nope31DaysCacheService.findExists(userId, userIds);
         } catch (Throwable t) {
             logger.info("服务调用失败 findExist, userId=" + userId, t);
             throw new TException(t);

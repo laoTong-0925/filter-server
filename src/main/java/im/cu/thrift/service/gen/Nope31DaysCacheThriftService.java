@@ -5,7 +5,7 @@
  *
  * @generated
  */
-package im.cu.thrift.service;
+package im.cu.thrift.service.gen;
 
 import org.apache.thrift.EncodingUtils;
 import org.apache.thrift.TException;

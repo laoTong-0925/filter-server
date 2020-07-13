@@ -1,11 +1,11 @@
-package im.cu;
+package test;
 
 
 import im.cu.base.constants.ConfigStringListKeys;
 import im.cu.framework.helper.CUBeanFactory;
 import im.cu.framework.thrift.ThriftBasedServiceServer;
 import im.cu.model.system.LocalServer;
-import im.cu.thrift.service.Nope31DaysCacheThriftService;
+import im.cu.thrift.service.gen.Nope31DaysCacheThriftService;
 import im.cu.thrift.service.handler.Nope31DaysCacheThriftServerHandler;
 
 /**

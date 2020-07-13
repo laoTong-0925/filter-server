@@ -1,39 +1,44 @@
 package im.cu.model;
 
-public class ServerHashRange {
-    private final Integer serverHash;
-    private final Integer beforeServerHash;
-    private final Boolean isLast;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
-    public Integer getServerHash() {
+/**
+ * @ClassName : ServerHashRange
+ * @Description : 服务自身的哈希环区间
+ * @Author : t_t
+ * @Date: 2020-06-30 17:47
+ */
+public class ServerHashRange {
+    private final int serverHash;
+    private final int beforeServerHash;
+    private final boolean isLast;
+
+    public int getServerHash() {
         return serverHash;
     }
 
-    public Integer getBeforeServerHash() {
+    public int getBeforeServerHash() {
         return beforeServerHash;
     }
 
-    public Boolean getLast() {
+    public boolean getLast() {
         return isLast;
     }
 
 
-    public ServerHashRange(Integer serverHash, Integer beforeServerHash, Boolean isLast) {
+    public ServerHashRange(int serverHash, int beforeServerHash, boolean isLast) {
         this.serverHash = serverHash;
         this.beforeServerHash = beforeServerHash;
         this.isLast = isLast;
     }
 
-    public ServerHashRange(Integer serverHash, Integer beforeServerHash) {
+    public ServerHashRange(int serverHash, int beforeServerHash) {
         this(serverHash, beforeServerHash, false);
 }
 
     @Override
     public String toString() {
-        return "ServerHashRange{" +
-                "serverHash=" + serverHash +
-                ", beforeServerHash=" + beforeServerHash +
-                ", isLast=" + isLast +
-                '}';
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
     }
 }

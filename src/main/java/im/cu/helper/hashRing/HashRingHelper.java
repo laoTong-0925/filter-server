@@ -1,11 +1,10 @@
-package im.cu.helper.HashRing;
+package im.cu.helper.hashRing;
 
 import im.cu.hash.FnvHashStrategy;
 import im.cu.hash.HashStrategy;
 import im.cu.model.ServerHashRange;
 import im.cu.model.ServerNode;
 import im.cu.model.system.LocalServer;
-import im.cu.zk.ZKConfigKey;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
@@ -23,8 +22,16 @@ public class HashRingHelper {
 
     private static final HashStrategy hashStrategy = new FnvHashStrategy();
 
-    private static Integer VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
+    /**
+     * 虚节点个数，不包含实节点
+     */
+    private static final int VIRTUAL_NODE_SIZE = 2;
 
+    /**
+     * 哈希策略
+     *
+     * @return HashStrategy
+     */
     public static HashStrategy getHashStrategy() {
         return hashStrategy;
     }
@@ -54,6 +61,8 @@ public class HashRingHelper {
     }
 
     /**
+     * 加载一致性哈希环
+     *
      * @param realNodeList 实节点
      * @return List<HashRingNode> 新哈希环
      */
@@ -78,23 +87,29 @@ public class HashRingHelper {
      *
      * @param url                   ip:port
      * @param thisServerForHashRing 哈希环上本服务的节点
+     * @return Map<Integer, String>
      */
     private static void buildHashRingNode(String url, List<Integer> thisServerForHashRing, Map<Integer, String> temporaryHasHhRing) {
-        for (int i = 0; i <= 100; i++) {
-            int serverHashCode = hashStrategy.getHashCode(url + i);
+        int tmp = 0;
+        int virtualNodeSize = VIRTUAL_NODE_SIZE;
+        while (true) {
+            if (tmp > 3000) {
+                throw new RuntimeException("buildHashRingNode() 构建哈希环次数 大于3000 存在冲突");
+            }
+            int serverHashCode = hashStrategy.getHashCode(url + tmp++);
             if (!temporaryHasHhRing.containsKey(serverHashCode)) {//冲突了继续
                 temporaryHasHhRing.put(serverHashCode, url);
-                if (url.equals(LocalServer.getIp())) {
+                if (url.equals(LocalServer.getUrl())) {
                     thisServerForHashRing.add(serverHashCode);
                 }
             } else {
+                logger.info("{} 数值 hash {} 冲突", url + (tmp - 1), serverHashCode);
                 continue;
             }
-            if (VIRTUAL_NODE_SIZE <= 0) {
-                VIRTUAL_NODE_SIZE = ZKConfigKey.VIRTUAL_NODE_SIZE;
+            if (virtualNodeSize <= 0) {
                 return;
             }
-            VIRTUAL_NODE_SIZE--;
+            virtualNodeSize--;
         }
     }
 
@@ -115,10 +130,7 @@ public class HashRingHelper {
                 if (server == hashRingHashCode) {
                     ServerHashRange serverHashRange;
                     if (j != 0) {//其他节点
-                        Integer beforeServerHashCode = sortedHashRing.get(j - 1).getHash();
-                        if (null == beforeServerHashCode) {
-                            throw new IllegalArgumentException();
-                        }
+                        int beforeServerHashCode = sortedHashRing.get(j - 1).getHash();
                         serverHashRange = new ServerHashRange(server, beforeServerHashCode);
                     } else {//首个hash节点 最后一个节点到首个节点
                         serverHashRange = new ServerHashRange(server, 0);
@@ -130,10 +142,6 @@ public class HashRingHelper {
                 }
             }
         }
-//        logger.info("--------服务区间加载完毕--------");
-//        serverHashRangeList.forEach(e -> {
-//            System.out.println(e.toString());
-//        });
         return serverHashRangeList;
     }
 

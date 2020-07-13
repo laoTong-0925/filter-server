@@ -2,12 +2,12 @@ package im.cu.service.impl;
 
 import com.wealoha.common.config.Config;
 import im.cu.base.constants.ConfigStringListKeys;
-import im.cu.helper.HashRing.HashRingHelper;
+import im.cu.helper.hashRing.HashRingHelper;
 import im.cu.model.ServerHashRange;
 import im.cu.model.ServerNode;
-import im.cu.model.system.BeginNode;
 import im.cu.model.system.LocalServer;
-import im.cu.service.RangeService;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,36 +15,40 @@ import java.util.List;
 
 /**
  * @ClassName : LoadCacheHelper
- * @Description :
+ * @Description : 负责加载服务区间 用于数据加载或清洗
  * @Author :
  * @Date: 2020-06-20 00:37
  */
 @Service
-public class RangeServiceImpl implements RangeService {
+public class RangeService {
 
-    private org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RangeServiceImpl.class);
+    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RangeService.class);
 
     /**
      * 服务区间
      */
-    private List<ServerHashRange> serverHashRangeList;
+    private static List<ServerHashRange> serverHashRangeList;
+
+    @Autowired
+    private Nope31DaysCacheService nope31DaysCacheService;
 
     /**
      * 加载 服务区间
      */
-    @Override
-    public void loadHashRange() {
+    public void loadHashRange(boolean isCallBack) {
         List<String> beginNode;
-        if (LocalServer.getIsNew()) {
-            String ip = LocalServer.getIp();
-            logger.info("-----------新增服务---{}------", ip);
+        if (CollectionUtils.isEmpty(LocalServer.getBeginNode()) || isCallBack) {
+            String ip = LocalServer.getUrl();
             beginNode = Config.instance.get(ConfigStringListKeys.ThriftMutableNope31DaysCacheServerV2);
-            beginNode.add(ip);
+            if (!isCallBack) {
+                logger.info("-----------新增服务---{}------", ip);
+                beginNode.add(ip);
+            }
         } else {
-            beginNode = BeginNode.beginNode;
+            beginNode = LocalServer.getBeginNode();
         }
         //哈希环
-        System.out.println("-------loadServerRange------");
+        logger.info("-------loadServerRange------");
         if (beginNode == null)
             return;
         //本服务hash集合
@@ -54,9 +58,12 @@ public class RangeServiceImpl implements RangeService {
         //区间
         serverHashRangeList = HashRingHelper.initRange(sortedHashRingList, thisServerForHashRing);
         int i = serverHashRangeList.stream().mapToInt(e -> (e.getServerHash() - e.getBeforeServerHash())).sum();
-        System.out.println("覆盖范围 ：" + (double) i / (double) Integer.MAX_VALUE);
+        logger.info("覆盖范围 ：" + (double) i / (double) Integer.MAX_VALUE);
         logger.info("--------服务区间加载完毕--------");
         serverHashRangeList.forEach(e -> logger.info(e.toString()));
+        if (isCallBack) {
+            nope31DaysCacheService.reload();
+        }
     }
 
     /**

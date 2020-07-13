@@ -5,19 +5,22 @@ import com.wealoha.common.notify.NotifyByZookeeper;
 import com.wealoha.thrift.PoolConfig;
 import com.wealoha.thrift.ServiceInfo;
 import im.cu.base.constants.ConfigStringListKeys;
-import im.cu.helper.HashRing.HashRingHelper;
+import im.cu.helper.hashRing.HashRingHelper;
 import im.cu.model.ServerNode;
 import im.cu.route.RouteHelper;
-import im.cu.thrift.Base.BaseFilterPoolThriftClient;
-import im.cu.thrift.service.Nope31DaysCacheThriftService;
+import im.cu.service.impl.RangeService;
+import im.cu.thrift.base.BaseFilterPoolThriftClient;
+import im.cu.thrift.service.gen.Nope31DaysCacheThriftService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TTransport;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -39,21 +42,31 @@ public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Nope
      */
     private List<ServerNode> sortedHashRing;
 
+    @Autowired
+    private RangeService rangeService;
+
+    @PostConstruct
+    private void init() {
+        List<String> list = Config.instance.get(getConfigKey());
+        loadHashRing(list);
+        register();
+    }
+
     /**
-     * 重载哈希环和连接池
+     * 重载哈希环\连接池\BItMap
      */
     private void register() {
         NotifyByZookeeper.registerCallback(getConfigKey().configKey(),
                 (oldData, newData) -> {
+                    logger.info("回调 重载哈希环\\连接池\\BItMap");
                     //处理新的url数据为List
                     try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                        TimeUnit.SECONDS.sleep(5);
+                    } catch (InterruptedException e) {}
                     List<String> list = Config.instance.get(getConfigKey());
                     loadHashRing(list);
                     reloadClientPoolMap();
+                    rangeService.loadHashRange(true);
                 });
     }
 
@@ -80,17 +93,8 @@ public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Nope
      * @return Set<Integer> 过滤后的用户Id
      */
     public Set<Integer> findExists(int userId, List<Integer> userIds) {
-        if (userId == 0 && CollectionUtils.isEmpty(userIds))
+        if (CollectionUtils.isEmpty(userIds))
             return null;
-        if (sortedHashRing == null) {
-            synchronized (this) {
-                if (sortedHashRing == null) {
-                    List<String> list = Config.instance.get(getConfigKey());
-                    loadHashRing(list);
-                    register();
-                }
-            }
-        }
         ServerNode serverNode = RouteHelper.routeServer(userId, sortedHashRing);
         if (serverNode == null)
             return null;
@@ -127,6 +131,6 @@ public class Nope31DaysCacheThriftClient extends BaseFilterPoolThriftClient<Nope
 
     @Override
     protected void adjustPoolConfig(PoolConfig poolConfig) {
-        poolConfig.setTimeout(5 * 60 * 1000);
+        poolConfig.setTimeout((int) TimeUnit.SECONDS.toMillis(5));
     }
 }

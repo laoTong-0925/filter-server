@@ -12,12 +12,12 @@ import java.util.Scanner;
 import java.util.Set;
 
 /**
- * @ClassName : TestAddD
- * @Description :
+ * @ClassName : ClientRunner
+ * @Description : 客户端
  * @Author :
  * @Date: 2020-07-03 15:27
  */
-public class ClientTest {
+public class ClientRunner {
 
     public static void main(String[] args) {
         Nope31DaysCacheThriftClient client = CUBeanFactory.getBean(Nope31DaysCacheThriftClient.class);
